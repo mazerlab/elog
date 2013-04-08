@@ -1,0 +1,17 @@
+1. On some machine with mysql-devel installed, compile the
+mex file:
+
+ /auto/share/matlab7.1/bin/mex \
+    -I/usr/include/mysql \
+    -L/usr/lib/mysql \
+    -lmysqlclient mysql.cpp
+
+2. Then copy the shared mysqlclient libs from that machine
+into the matlab glnx86 directory:
+
+  sudo cp /usr/lib/mysql/libmysqlclient* bin/glnx86
+
+3. install .m and .mexglx file in shared directory:
+
+ sudo cp mysql.m mysql.mexglx /auto/share/matlab-local
+

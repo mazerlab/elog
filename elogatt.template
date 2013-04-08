@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+import sys; sys.path.append('%%LIB%%')
+import os, string
+from elog.tools import Database
+from elog.main import attach
+
+PNAME = os.path.basename(sys.argv[0])
+
+if len(sys.argv) < 3:
+    sys.stderr.write('usage: %s dfile jpegfile [info...]' % (PNAME,))
+    sys.stderr.write("""
+attach jpeg image to a pype datafile from command line.
+     dfile - unique name of datafile (eg, romeo0045.spotmap.000)
+  jpegfile - existing jpeg file
+      info - rest of line is inserted as a note\n""")
+    sys.exit(1)
+
+dfile = sys.argv[1]                     # datafile name/wildcard
+jfile = sys.argv[2]                     # jpeg file
+if len(sys.argv) > 2:
+    info = string.join(sys.argv[3:])
+else:
+    info = ''
+
+if not os.path.isfile(jfile):
+    sys.stderr.write('%s: can''t file %s\n' % (PNAME, jfile,))
+    sys.exit(1)
+    
+db = Database()
+
+q = """SELECT * FROM dfile WHERE src LIKE '%%%s%%'""" % (sys.argv[1],)
+rows = db.query(q)
+
+if len(rows) == 0:
+    sys.stderr.write('%s: no datafile matches in database\n' % (PNAME,))
+    sys.exit(1)
+elif len(rows) > 1:
+    sys.stderr.write('%s: multiple matches in database\n' % (PNAME,))
+    for row in rows:
+        sys.stderr.write(' %s\n' % (row['src'],))
+    sys.exit(1)
+else:
+    row = rows[0]
+
+im = open(jfile, 'r').read().encode('base64')
+
+title='%s/%s' % (row['exper'],os.path.basename(row['src']),)
+if len(info):
+    note = '%s\njpegsrc=%s' % (info, jfile,)
+else:
+    note = 'jpegsrc=%s' % (jfile,)
+
+attid = attach(None, db, im=im, title=title, note=note,
+               srctable='dfile', srcID=row['dfileID'])
+
+new = rows[0]['attachlist'] + '%d,' % attid
+db.query("""UPDATE dfile SET attachlist='%s'"""
+         """ WHERE dfileID=%d""" % (new, row['dfileID']))
+
+db.close()
+sys.exit(0)
