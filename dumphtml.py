@@ -15,7 +15,7 @@ class FormatError:
     def __init__(self, errormsg=None):
         if errormsg:
             FormatError._buf.append(errormsg)
-        
+
     def get(self):
         return FormatError._buf
 
@@ -95,12 +95,12 @@ def emit_session(outdir, db, r):
         """%(note)s\n""" \
         """  </td></tr>\n""" \
         """</table>\n""" % r
-    
+
     # expand 'exper' hyperlinks iteratively until there are no more..
     while 1:
         links = re.findall('<elog:exper=.*>', s)
         if len(links) == 0: break
-        
+
         link = links[0]
         x = string.find(s, link)
         before = s[:x]
@@ -109,7 +109,7 @@ def emit_session(outdir, db, r):
         rows = db.query("""SELECT * FROM exper
         WHERE animal='%s' AND date='%s' AND exper='%s'
         """ % (r['animal'], r['date'], exper))
-        
+
         if len(rows) == 0:
             s = before + """<b style="background-color:red">[DEADEND EXPER LINK: %s]</b>\n""" % link[1:-1] + after
             sys.stderr.write("deadend link warning: '%s'\n" % link)
@@ -131,7 +131,7 @@ def emit_session(outdir, db, r):
         if len(links) == 0:
             # no more links, we're done..
             break
-        
+
         # find the location of the first link
         link = links[0]
         x = string.find(s, link)
@@ -159,9 +159,12 @@ def emit_session(outdir, db, r):
 
 def emit_exper(outdir, db, r):
     """generate string resentation of EXPR record"""
-    
+
+    if r['deleted']:
+        return """<br><del>%(exper)s</del>"""
+        
     r['note'] = nlsqueeze(wrap(r['note']))
-    
+
     s = "" \
         """<br>\n""" \
         """<table class="tab_exper">\n""" \
@@ -207,13 +210,13 @@ def emit_dfiles(outdir, db, rows):
         """  <tr> <th>pref</th> <th>src</th> <th>notes</th> </tr>\n\n"""
 
     rows.sort(None, lambda s: int(s['src'].split('.')[-1]))
-    
+
     alist = []
     for d in rows:
         for a in d['attachlist'].split(','):
             if len(a) > 0:
                 alist.append(a)
-        
+
         d['preferred'] = YN(d['preferred'],'*',' ')
         d['note'] = nlsqueeze(wrap(d['note']))
 
@@ -230,7 +233,7 @@ def emit_dfiles(outdir, db, rows):
 
         s = s + l
 
-        
+
     s = s + """</table>\n"""
 
     if len(alist) > 0:
@@ -291,7 +294,7 @@ def emit_unit(outdir, db, r):
     r['color'] = F("%s", r['color'])
 
     r['note'] = nlsqueeze(wrap(r['note']))
-    
+
     s = "" \
         """<table class="tab_unit" bgcolor="#e0e0e0">\n""" \
         """  <tr>\n""" \
@@ -323,9 +326,9 @@ def dump(outdir, db, animal, count, rev=None, date=None):
     rows = db.query("""\
     SELECT * FROM session WHERE animal LIKE '%s' %s ORDER BY date""" \
                           % (animal, date,))
-    
+
     if len(rows) == 0:
-        sys.stderr.write("No matches for: animal='%s'\n" % animal) 
+        sys.stderr.write("No matches for: animal='%s'\n" % animal)
         return
 
     if count > 0:
@@ -343,7 +346,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
         return
 
     out = open(outdir+'/index.html', 'w')
-    
+
     out.write("""<style type="text/css">\n"""
               """  .button { margin-left:5; margin-right:5}\n"""
               """  .tab_session { width:100%;\n"""
@@ -399,6 +402,6 @@ def dump(outdir, db, animal, count, rev=None, date=None):
 
     out.write(outbuf)
     out.close()
-        
+
     return 1
-        
+
