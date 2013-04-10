@@ -38,6 +38,7 @@ EXPER_FIELDS = (
     ("animal",          None, None, DISABLED, 10,      (0, 1, 1), ),
     ("date",            None, sdate, DISABLED, 12,      (0, 2, 1), ),
     ("time",            None, None, NORMAL, 21,      (0, 3, 1), ),
+    ("deleted",         BOOL, int, NORMAL, 0,        (0, 4, 1), ),
     ("note",            TEXT, None, NORMAL, (80, 10),    (1, 0, 4), ),
     )
 

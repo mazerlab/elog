@@ -45,6 +45,13 @@ def attach(tk, db, im=None, title='no title', note='',
         w = AttachmentViewer(tk, db, id, title=title)
     return id
 
+def isdel(date, exper):
+    """Check to see if 'exper' has been marked as deleted.
+    """
+    rows = Database().query("""SELECT deleted FROM exper"""
+                         """ WHERE date='%s' AND exper='%s'"""
+                         % (date, exper,))
+    return rows[0]['deleted']
 
 class AttachmentViewer(Toplevel):
     attachmentList = {}
@@ -261,13 +268,13 @@ class RecordView(Frame):
                         txt.tag_add('experlink', begin, end)
 
                         (date, exper) = unlink_exper(txt.get(begin, end))
-
-                        ew = ExperWindow(txt, self.db, name='%s' % exper,
-                                         relief=RIDGE, borderwidth=2)
-                        ew.fill(exper=exper, date=date)
-                        txt.window_create(end, window=ew, padx=10)
-                        self._children.append(ew)
-                        self._children_info[ew] = 'exper:%s' % exper
+                        if (GuiWindow.showdel.get() or not isdel(date, exper)):
+                            ew = ExperWindow(txt, self.db, name='%s' % exper,
+                                             relief=RIDGE, borderwidth=2)
+                            ew.fill(exper=exper, date=date)
+                            txt.window_create(end, window=ew, padx=10)
+                            self._children.append(ew)
+                            self._children_info[ew] = 'exper:%s' % exper
                         begin = end
                 txt.see(END)
 
@@ -839,7 +846,7 @@ class SessionWindow(Frame):
             if int(row['exper'][-4:]) > 0:
                 link = "<elog:exper=%s/%s>" % (row['date'], row['exper'])
                 if string.find(d['note'], link) < 0:
-                    sys.stderr.write('missing link: %s' % link)
+                    sys.stderr.write('%s in database, but not linked\n' % link)
                     missing = missing + 1
                     d['note'] = d['note'] + '\n' + link + '\n'
 
@@ -875,8 +882,15 @@ class GuiWindow(Frame):
         GuiWindow.showlinks = IntVar()
         GuiWindow.showlinks.set(0)
 
+        GuiWindow.showdel = IntVar()
+        GuiWindow.showdel.set(0)
+
         menu.addmenuitem('Edit', 'checkbutton', label='show links',
                          variable=GuiWindow.showlinks,
+                         command=lambda s=self:s.jump(0))
+
+        menu.addmenuitem('Edit', 'checkbutton', label='show deleted',
+                         variable=GuiWindow.showdel,
                          command=lambda s=self:s.jump(0))
 
         for a in find_animals(db):

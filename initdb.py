@@ -51,7 +51,8 @@ def init_exper(db):
     time        VARCHAR(11),
     note        TEXT,
     locked      INT,
-    lastmod     VARCHAR(255)
+    deleted     INT,
+    lastmod     VARCHAR(255),
     )
     """)
 
