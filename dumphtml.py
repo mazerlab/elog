@@ -161,7 +161,7 @@ def emit_exper(outdir, db, r):
     """generate string resentation of EXPR record"""
 
     if r['deleted']:
-        return """<br><del>%(exper)s</del>"""
+        return """<br><it>{exper:%(exper)s marked as deleted}</it>""" % r
         
     r['note'] = nlsqueeze(wrap(r['note']))
 
