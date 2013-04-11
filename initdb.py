@@ -35,6 +35,7 @@ def init_session(db):
     ncorrect    INT,
     note       TEXT,
     locked     INT,
+    tags       VARCHAR(1024),
     lastmod    VARCHAR(255)
     )
     """)
@@ -52,6 +53,7 @@ def init_exper(db):
     note        TEXT,
     locked      INT,
     deleted     INT,
+    tags       VARCHAR(1024),
     lastmod     VARCHAR(255),
     )
     """)
@@ -80,6 +82,7 @@ def init_unit(db):
     crap        INT,
     note        TEXT,
     locked      INT,
+    tags        VARCHAR(1024),
     lastmod     VARCHAR(255)
     )
     """)
@@ -102,6 +105,7 @@ def init_dfile(db):
     note     TEXT,
     attachlist TEXT,
     locked   INT,
+    tags     VARCHAR(1024),
     lastmod  VARCHAR(255)
     )
     """)
@@ -122,6 +126,7 @@ def init_attachment(db):
     data       LONGBLOB,
 
     locked     INT,
+    tags       VARCHAR(1024),
     lastmod    VARCHAR(255)
     )
     """)

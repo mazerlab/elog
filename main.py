@@ -53,6 +53,31 @@ def isdel(date, exper):
                          % (date, exper,))
     return rows[0]['deleted']
 
+def alltags():
+    """Get list of all tags from database
+    """
+    tags = {}
+    for table in ('attachment', 'dfile', 'exper', 'session', 'unit'):
+        rows = Database().query("""SELECT tags FROM %s WHERE 1""" % (table,))
+        for row in rows:
+            for tag in row['tags'].split(','):
+                if len(tag) > 0:
+                    try:
+                        tags[tag] += 1
+                    except KeyError:
+                        tags[tag] = 1
+    return tags.keys()
+
+def tag_select(parent):
+    d = Pmw.ComboBoxDialog(parent,
+                           title='Select tag',
+                           buttons = ('Ok', 'Cancel'),
+                           scrolledlist_items = alltags())
+    if d.activate() == 'Ok':
+        return d.get()
+    else:
+        return None
+
 class AttachmentViewer(Toplevel):
     attachmentList = {}
 
@@ -548,6 +573,17 @@ class ExperWindow(Frame):
 
         if name:
             Label(buttonbar, text=name).pack(side=LEFT)
+
+        self.tagb = Button(buttonbar, text='+Tag', \
+                           command=lambda: self.tag(add=1))
+        createToolTip(self.tagb, 'add tag')
+        self.tagb.pack(side=LEFT)
+
+        b = Button(buttonbar, text='-Tag', \
+                   command=lambda: self.tag(add=0))
+        createToolTip(b, 'edit/delete tags')
+        b.pack(side=LEFT)
+
         b = Button(buttonbar, text='New Unit', \
                    command=self.new_unit)
         createToolTip(b, 'create new unit (TTL etc)')
@@ -558,6 +594,34 @@ class ExperWindow(Frame):
 
         self.unitbook = None
         self.unitlist = []
+
+    def tag(self, add=1):
+        d = self.rv.getall()
+        if add:
+            newtag = tag_select(self)
+            if not newtag is None:
+                rows = self.db.query("""SELECT tags,experID FROM exper"""
+                                     """ WHERE exper='%(exper)s'"""
+                                     """ AND date='%(date)s'""" % d)
+                tags = rows[0]['tags']
+                if len(tags) > 0:
+                    tags = rows[0]['tags'] + ',' + newtag
+                else:
+                    tags = newtag
+                tags = ",".join(list(set(tags.split(','))))
+                self.db.query("""UPDATE exper SET tags='%s'"""
+                              """ WHERE experID=%d""" % (tags,
+                                                         rows[0]['experID']))
+        else:
+            rows = self.db.query("""SELECT tags,experID FROM exper"""
+                                 """ WHERE exper='%(exper)s'"""
+                                 """ AND date='%(date)s'""" % d)
+            tags = ask(self, 'tags:', rows[0]['tags'])
+            if not tags is None:
+                tags = ",".join(list(set(tags.split(','))))
+                self.db.query("""UPDATE exper SET tags='%s'"""
+                              """ WHERE experID=%d""" % (tags,
+                                                         rows[0]['experID']))
 
     def getunitbook(self):
         """Get handle for unit-notebook, or else make one if it doesn't exist.
@@ -579,6 +643,10 @@ class ExperWindow(Frame):
                                  """ WHERE exper='%s' AND date='%s'""" %
                                  (exper, date,))
             if len(rows) > 0:
+                if len(rows[0]['tags']) > 0:
+                    createToolTip(self.tagb, 'tags: ' + rows[0]['tags'])
+                else:
+                    createToolTip(self.tagb, 'add tags')
                 self.rv.setall(rows[0])
                 self.date = date
                 self.exper = exper
@@ -591,6 +659,8 @@ class ExperWindow(Frame):
                 for row in rows:
                     u = UnitWindow(self.db, self, row['unit'])
                     self.unitlist.append(u)
+
+
         d = self.rv.getall()
 
         # get list of datafiles
@@ -876,7 +946,7 @@ class GuiWindow(Frame):
 
         menu.addmenuitem('Edit', 'command', label='Text View',
                          command=lambda s=self: s.session.textview())
-        menu.addmenuitem('Edit', 'command', label='Find exper/date (Alt-G)',
+        menu.addmenuitem('Edit', 'command', label='Find session by date (Alt-G)',
                          command=lambda s=self: s.session.find())
         menu.addmenuitem('Edit', 'separator')
         GuiWindow.showlinks = IntVar()
@@ -892,6 +962,9 @@ class GuiWindow(Frame):
         menu.addmenuitem('Edit', 'checkbutton', label='show deleted',
                          variable=GuiWindow.showdel,
                          command=lambda s=self:s.jump(0))
+
+        menu.addmenuitem('Edit', 'command', label='tagtest',
+                         command=lambda tk=master: tag_select(tk))
 
         for a in find_animals(db):
             menu.addmenuitem('Animals', 'command', label=a,
