@@ -1,5 +1,5 @@
-function pf = dbfind(pattern)
-%function pf = dbfind(pattern)
+function pf = dbfind(pattern, varargin)
+%function pf = dbfind(pattern, ...opts...)
 %
 % Find datafiles using sql-db -- load if unique, otherwise show
 %
@@ -18,6 +18,12 @@ function pf = dbfind(pattern)
 %
 %  INPUT
 %    pattern - filename pattern
+%    opts -
+%       'all' - allow multiple matches
+%       'one' -  allow exactly one match
+%       'load' - load files (otherwise, just result names)
+%       'noload' - load files (otherwise, just result names)
+%
 
 %  OUTPUT
 %    pf - pypefile datastruct (from p2mLoad2)
@@ -30,6 +36,18 @@ DBNAME = 'mlabdata';
 BASEDIR = '/auto/data/critters/';
 
 assert(~isempty(pattern), 'pattern required');
+
+multiple_ok = 0;
+loadp2m = 1;
+
+if any(strcmp(varargin, 'load')),       loadp2m=1;      end
+if any(strcmp(varargin, 'noload')),     loadp2m=0;      end
+if any(strcmp(varargin, 'all')),        multiple_ok=1;  end
+if any(strcmp(varargin, 'one')),        multiple_ok=0;  end
+
+if ~exist('multiple_ok', 'var')
+  multiple_ok = 0;
+end
 
 if nargout == 0
   load = 0;
@@ -49,15 +67,46 @@ query = sprintf('SELECT src FROM dfile WHERE src LIKE "%%%s%%"', ...
 [src] = mysql(query);
 mysql('close');
 
-%Check for a single answer
-if (length(src) > 1)
+if length(src) > 1
+  % sort files by run number (last 3 chars) so it's easier to parse
+  ns = [];
   for n = 1:length(src)
-    fprintf('%s\n', src{n});
+    ns(n) = str2num(src{n}(end-2:end));
   end
-  error('multiple expers match "%s"', pattern)
-elseif(isempty(date))
-  error('cell %s not found', pattern)
+  [~,ix] = sort(ns);
+  src = src(ix);
 end
-pf = p2mLoad2([src{1} '.p2m']);
+
+if ~multiple_ok
+  %Check for a single answer
+  if (length(src) > 1)
+    for n = 1:length(src)
+      fprintf('%s\n', src{n});
+    end
+    error('multiple expers match "%s"', pattern);
+  elseif (isempty(date))
+    error('cell %s not found', pattern)
+  end
+  if loadp2m
+    pf = p2mLoad2([src{1} '.p2m']);
+  else
+    pf = [src{1} '.p2m'];
+  end
+else
+  pf = [];
+  for n = 1:length(src)
+    if exist(src{n}, 'file')
+      if loadp2m
+        pf{n} = p2mLoad2([src{n} '.p2m']);
+      else
+        pf{n} = [src{n} '.p2m'];
+      end
+    else
+      fprintf('warning: %s missing\n', src{n});
+    end
+  end
+end
+
+
 
 
