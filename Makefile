@@ -7,6 +7,7 @@ test-inplace:
 		<elog.template >./elog
 	sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elogatt.template >./elogatt
+	chmod +x ./dbfind
 	chmod +x ./elog
 	chmod +x ./elogatt
 
@@ -21,9 +22,9 @@ install2:
 		<elog.template >/auto/share/bin/elog 
 	sed s^%%LIB%%^/auto/share/lib^g \
 		<elogatt.template >/auto/share/bin/elogatt
-	chmod +x /auto/share/bin/elog
 	chmod +x /auto/share/bin/elogatt
-	cp dbfind.m elogatt.m /auto/share/pypeextra/
+	cp dbfind dbfind.m elogatt.m /auto/share/pypeextra/
+	chmod +x /auto/share/pypeextra/dbfind
 
 testdata:
 	mysqldump -hsql -umlab -pmlab \
