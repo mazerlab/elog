@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
-import sys
+import sys, os
 import string
 import MySQLdb
 
@@ -53,17 +53,21 @@ result = {}
 if len(sys.argv) > 1:
     target = '%' + string.join(sys.argv[1:],'%') + '%'
     db = DB()
-    (ok, rows) = db.q('SELECT src FROM dfile WHERE src LIKE "%s"' % target)
+    (ok, rows) = db.q('SELECT src FROM dfile WHERE src LIKE "%s"'
+                      ' ORDER BY date, right(src, 3)' % target)
+    dlist = {}
     for r in rows:
         if dir:
-            result[string.join(r['src'].split('/')[0:-1],'/')] = 1
+            d = os.path.dirname(r['src'])
+            if not dlist.has_key(d):
+                print os.path.dirname(r['src'])
+                dlist[d] = 1
         else:
-            result[r['src']] = 1
-    for r in result.keys():
-        print r
+            print r['src']
+
 else:
     sys.stderr.write('usage: dbfind [-d] partial file/exper name\n')
     sys.stderr.write('  look for pype datafiles using the lab database\n')
     sys.stderr.write('  -d prints directory name only\n')
-        
-    
+
+
