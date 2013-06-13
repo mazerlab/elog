@@ -62,20 +62,11 @@ end
 
 %% Query the DB
 pattern = strrep(pattern, '*', '%');
-query = sprintf('SELECT src FROM dfile WHERE src LIKE "%%%s%%"', ...
+query = sprintf(['SELECT src FROM dfile WHERE src LIKE "%%%s%%"' ...
+                 ' ORDER BY date, right(src, 3)'], ...
                 pattern);
 [src] = mysql(query);
 mysql('close');
-
-if length(src) > 1
-  % sort files by run number (last 3 chars) so it's easier to parse
-  ns = [];
-  for n = 1:length(src)
-    ns(n) = str2num(src{n}(end-2:end));
-  end
-  [~,ix] = sort(ns);
-  src = src(ix);
-end
 
 if ~multiple_ok
   %Check for a single answer
