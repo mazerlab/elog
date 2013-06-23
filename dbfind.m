@@ -68,6 +68,10 @@ query = sprintf(['SELECT src FROM dfile WHERE src LIKE "%%%s%%"' ...
 [src] = mysql(query);
 mysql('close');
 
+if isempty(src)
+  error('no match');
+end
+
 if ~multiple_ok
   %Check for a single answer
   if (length(src) > 1)
