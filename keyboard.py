@@ -2,17 +2,18 @@
 
 def keyboard(banner='Type EOF/^D to continue'):
 	"""Clone of the matlab keyboard() function.
-	
+
 	Drop down into interactive shell for debugging
     Use it like the matlab keyboard command -- dumps you into
     interactive shell where you can poke around and look at
 	variables in the current stack frame
-	
+
     The idea and code are stolen from something Fredrick
 	Lundh posted on the web a while back.
     """
 
-	import code, sys
+	import code
+    import sys
 
 	# use exception trick to pick up the current frame
 	try:

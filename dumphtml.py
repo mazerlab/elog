@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
-import string, textwrap, re, sys, time
+import string
+import textwrap
+import re
+import sys
+import time
+import os
+import posixpath
+
 from tools import *
-import os, posixpath
 
 LINEWIDTH=70
 
@@ -162,7 +168,7 @@ def emit_exper(outdir, db, r):
 
     if r['deleted']:
         return """<br><it>{exper:%(exper)s marked as deleted}</it>""" % r
-        
+
     r['note'] = nlsqueeze(wrap(r['note']))
 
     s = "" \

@@ -7,9 +7,18 @@
 #       + UNIT: one per isolated unit (many per EXPER)
 #       + DFILE: one per datafile/run (many per EXPER)
 
-import string, sys, os, datetime, time, re
+import string
+import sys
+import os
+import datetime
+import time
+import re
 
-from keyboard import keyboard
+# from keyboard import keyboard
+try:
+    import parsedatetime as pdt
+except:
+    pdt = None
 
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
@@ -117,7 +126,9 @@ class AttachmentViewer(Toplevel):
         AttachmentViewer.attachmentList[self.rows['attachmentID']] = self
 
     def getattach(self):
-        import PIL.Image, StringIO, ImageTk
+        import PIL.Image
+        import StringIO
+        import ImageTk
 
         rows = self.db.query("""SELECT * FROM attachment"""
                              """ WHERE attachmentID=%d""" % (self.id,))
@@ -209,6 +220,8 @@ class Checkbutton2(Frame):
 
 class RecordView(Frame):
     def __init__(self, master, fields, db, **kwargs):
+        import types
+
         Frame.__init__(self, master, **kwargs)
 
         self._entries = {}
@@ -231,7 +244,15 @@ class RecordView(Frame):
             if not elist_by_col.has_key(col):
                 elist_by_col[col] = []
 
-            if validator == TEXT:
+            if type(validator) == types.TupleType:
+                # this doesn't quite work yet!
+                e = Pmw.ComboBox(self.frame1, labelpos='w',
+                                 label_text=fieldname,
+                                 dropdown=1)
+                if sz: e.component('entry')['width'] = sz
+                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W)
+                e.component('entry')['state'] = state
+            elif validator == TEXT:
                 (w, h) = sz
                 e = Pmw.ScrolledText(self.frame2,
                                      borderframe=1,
@@ -1159,7 +1180,8 @@ def require_tk(tk):
         sys.exit(0)
 
 def start():
-    import datetime, calendar
+    import datetime
+    import calendar
 
     if len(getuser()) == 0:
         sys.stderr.write('no user information available!\n')

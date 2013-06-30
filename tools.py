@@ -1,14 +1,21 @@
 #!/usr/bin/python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
+import sys
+import os
+import string
+import time
+import types
+import atexit
+
+
 import MySQLdb
 from Tkinter import *
 import tkFont
 import tkMessageBox
 import Pmw_1_3_2 as Pmw
-import sys, os, string, time, types, atexit
 
-from keyboard import keyboard
+# from keyboard import keyboard
 
 BOOL = 'bool'
 TEXT = 'text'

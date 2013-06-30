@@ -3,7 +3,11 @@
 
 # external API/interface for elog functions (ie, for pype)
 
-import string, sys, os, datetime, time
+import string
+import sys
+import os
+import datetime
+import time
 from tools import *
 
 def getdb(**kwargs):
@@ -40,7 +44,7 @@ def GetExper(animal):
             return None
     finally:
         db.close()
-        
+
     if len(rows) == 0:
         return None
     else:
@@ -89,6 +93,6 @@ def AddDatafile(exper, animal, user, fname, filetype,
         return (1, None)
     finally:
         db.close()
-                
+
 if __name__ == '__main__':
     pass
