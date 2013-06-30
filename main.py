@@ -1080,8 +1080,11 @@ class GuiWindow(Frame):
         self.destroy()
 
     def save(self):
-        self.session.save()
-        Msg("Saved.")
+        if self.db.readonly:
+            Msg("READ ONLY!")
+        else:
+            self.session.save()
+            Msg("Saved.")
         return 1
 
     def view(self, date=None, exper=None):
@@ -1144,15 +1147,18 @@ mlab database-backed electronic log notebook tool
 usage: %s [options] [date] [exper]
 
 General options:
+  -ro                      read only mode!
   -info                    list animals in database to stdout (and exit)
   -q                       query animal and date info from user
   -animal=<animal name>    select animal *FULL NAME, NOT ABBREV*
   -new                     flag to allow creation of new animal
   -date                    query for date from user
-  -date=YYYY-MM-DD         start new log entry if it doesn't exist
-  -exper=PREFIXnnnnn       jump to day exper was done
+  -date=YYYY-MM-DD         jump to specified date (-1 for yesterday etc)
+  -exper=PREFIXnnnnn       jump to date of 'exper'
   -today                   requires -animal as well!
-  -ro                      read only mode!
+  -last                    open at last entry
+
+Dump options:
   -dump[=N]                dump html to console; N<0 work backwards from now.
   -out=dir                 name of dump directory
   -rev                     reverse order of dump (ie, most recent first)
@@ -1191,6 +1197,8 @@ def start():
         sys.stderr.write('no host/computer name available!\n')
         sys.exit(1)
 
+    tk = None
+
     animal = None
     dump = None
     outdir = None
@@ -1204,7 +1212,7 @@ def start():
     info = None
     new = 0
     force_yes = 0
-    tk = None
+    last = 0
 
     try:
         tk = Tk()
@@ -1260,6 +1268,8 @@ def start():
             exper = string.split(arg, '=')[1]
         elif isarg(arg, '-today'):
             date = '%s' % datetime.date(1,1,1).today()
+        elif isarg(arg, '-last'):
+            last = 1
         elif isarg(arg, '-dump='):
             dump = 1
             count = int(string.split(arg, '=')[1])
@@ -1350,7 +1360,7 @@ def start():
 
     require_tk(tk)
 
-    app = GuiWindow(tk, Database(), animal=animal)
+    logwin = GuiWindow(tk, Database(), animal=animal)
 
     if date:
         dow = ''
@@ -1366,7 +1376,7 @@ def start():
         except TypeError:
             pass
 
-        if not app.exists(animal=animal, date=date):
+        if not logwin.exists(animal=animal, date=date):
             if not force_yes:
                 sys.stderr.write('animal=\'%s\' date=%s%s not in database.\n' % \
                                  (animal, date, dow))
@@ -1379,33 +1389,42 @@ def start():
                                     "Create new entry: '%s' on %s%s?" % \
                                     (animal, date, dow)):
                     sys.exit(0)
-                app.session.today(date=date)
-                app.save()
+                logwin.session.today(date=date)
+                logwin.save()
 
-    app.pack(fill=BOTH, expand=1, anchor=NW)
+    logwin.pack(fill=BOTH, expand=1, anchor=NW)
 
-    #s = Label(tk, text="", anchor=E, fg='red', relief=FLAT)
-    #s.pack(side=BOTTOM, expand=0, fill=X, anchor=W)
+    logwin.view(date=date)
+    if last:
+        logwin.jump(1e6)
 
-    #Msg(window=s)
-
-    app.view(date=date)
-
-    app.bind_all('<Alt-Control-KeyPress-q>', lambda e, tk=tk: die(tk))
-    app.bind_all('<Control-KeyPress-s>', lambda e, w=app: w.save())
-    app.bind_all('<Alt-KeyPress-s>', lambda e, w=app: w.save())
-    app.bind_all('<Alt-KeyPress-g>', lambda e, w=app: w.find())
-    app.bind_all('<Alt-KeyPress-n>', lambda e, w=app: w.new_exper())
-    app.bind_all('<Alt-KeyPress-r>', lambda e, w=app: w.jump(0))
-    app.bind_all('<Alt-KeyPress-Next>', lambda e, w=app: w.jump(1))
-    app.bind_all('<Alt-KeyPress-Prior>', lambda e, w=app: w.jump(-1))
-    app.bind_all('<Alt-Control-KeyPress-Next>', lambda e, w=app: w.jump(10))
-    app.bind_all('<Alt-Control-KeyPress-Prior>', lambda e, w=app: w.jump(-10))
-    app.bind_all('<Alt-Control-Home>', lambda e, w=app: w.jump(-1e6))
-    app.bind_all('<Alt-Control-End>', lambda e, w=app: w.jump(1e6))
+    logwin.bind_all('<Alt-Control-KeyPress-q>',
+                    lambda e, tk=tk: die(tk))
+    logwin.bind_all('<Control-KeyPress-s>',
+                    lambda e, w=logwin: w.save())
+    logwin.bind_all('<Alt-KeyPress-s>',
+                    lambda e, w=logwin: w.save())
+    logwin.bind_all('<Alt-KeyPress-g>',
+                    lambda e, w=logwin: w.find())
+    logwin.bind_all('<Alt-KeyPress-n>',
+                    lambda e, w=logwin: w.new_exper())
+    logwin.bind_all('<Alt-KeyPress-r>',
+                    lambda e, w=logwin: w.jump(0))
+    logwin.bind_all('<Alt-KeyPress-Next>',
+                    lambda e, w=logwin: w.jump(1))
+    logwin.bind_all('<Alt-KeyPress-Prior>',
+                    lambda e, w=logwin: w.jump(-1))
+    logwin.bind_all('<Alt-Control-KeyPress-Next>',
+                    lambda e, w=logwin: w.jump(10))
+    logwin.bind_all('<Alt-Control-KeyPress-Prior>',
+                    lambda e, w=logwin: w.jump(-10))
+    logwin.bind_all('<Alt-Control-Home>',
+                    lambda e, w=logwin: w.jump(-1e6))
+    logwin.bind_all('<Alt-Control-End>',
+                    lambda e, w=logwin: w.jump(1e6))
 
     tk.winfo_toplevel().title('elog:%s' % animal)
-    tk.protocol("WM_DELETE_WINDOW", app.quit)
+    tk.protocol("WM_DELETE_WINDOW", logwin.quit)
     tk.deiconify()
-    tk.wait_window(app)
+    tk.wait_window(logwin)
 

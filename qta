@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# run a local "quick-test" version of elog in place using
+# run a local "quick-test" version of elog 'attach' in place using
 # a test database (mlabdata_test instead of mlabdata)
 #
 # if called with -r argument, restore a virgin database first
