@@ -956,8 +956,8 @@ class GuiWindow(Frame):
         menu = Pmw.MenuBar(self, hull_relief=RAISED, hull_borderwidth=1)
 
         menu.addmenu('File', '', '')
-        menu.addmenu('Edit', '', '')
-        menu.addmenu('Animals', '', '')
+        menu.addmenuitem('File', 'command', label='force DB reconnect',
+                         command=self.reconnect)
         menu.addmenuitem('File', 'command', label='Save (Ctrl-S)',
                          command=self.save)
         menu.addmenuitem('File', 'command', label='Exit w/out save',
@@ -965,6 +965,7 @@ class GuiWindow(Frame):
         menu.addmenuitem('File', 'command', label='Quit (save first)',
                          command=self.quit)
 
+        menu.addmenu('Edit', '', '')
         menu.addmenuitem('Edit', 'command', label='Text View',
                          command=lambda s=self: s.session.textview())
         menu.addmenuitem('Edit', 'command', label='Find session by date (Alt-G)',
@@ -987,6 +988,7 @@ class GuiWindow(Frame):
         menu.addmenuitem('Edit', 'command', label='tagtest',
                          command=lambda tk=master: tag_select(tk))
 
+        menu.addmenu('Animals', '', '')
         for a in find_animals(db):
             menu.addmenuitem('Animals', 'command', label=a,
                              command=lambda s=self,a=a,tk=master: \
@@ -1045,6 +1047,9 @@ class GuiWindow(Frame):
 
         self.session = None
         self.jump(1e6)
+
+    def reconnect(self):
+        self.db.connect()
 
     def selanimal(self, tk, animal):
         if self.session:

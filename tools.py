@@ -152,6 +152,9 @@ class Database(object):
         if passwd is None:
             self.passwd = _env('ELOG_PASSWD', Database._PASSWD)
 
+        self.connect()
+
+    def connect(self):
         try:
             self.connection = MySQLdb.connect(self.host,
                                               self.user, self.passwd, self.db)
