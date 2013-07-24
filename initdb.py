@@ -68,7 +68,7 @@ def init_unit(db):
     unit        CHAR(10),
     animal      CHAR(10),
     date        DATE,
-    well        INT,
+    well        VARCHAR(11),
     wellloc     VARCHAR(255),
     area        VARCHAR(10),
     depth       INT,
