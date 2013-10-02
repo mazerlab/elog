@@ -1221,6 +1221,7 @@ def start():
 
     try:
         tk = Tk()
+        tk.tk_setPalette(background='white', foreground='red')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
         tk.option_add("*Font", 'Helvetica 8')
