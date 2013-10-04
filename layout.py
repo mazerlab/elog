@@ -29,7 +29,7 @@ SESSION_FIELDS = (
     ("ncorrect",        INTEGER, int, NORMAL, 5,   (3, 0, 1), ),
     ("ntrials",         INTEGER, int, NORMAL, 5,   (3, 1, 1), ),
     
-    ("note",            TEXT, None, NORMAL, (90, 25), (4, 0, 5), ),
+    ("note",            TEXT, None, NORMAL, (90, 20), (4, 0, 5), ),
     )
 
 EXPER_FIELDS = (

@@ -997,7 +997,7 @@ class GuiWindow(Frame):
         menu.pack(side=TOP, expand=0, fill=X)
 
         menuhull = Frame(menu.component('hull'))
-        menuhull.pack(side=RIGHT)
+        menuhull.pack(side=LEFT)
 
         if db.readonly:
             Label(menuhull, text='READ-ONLY',
@@ -1221,7 +1221,7 @@ def start():
 
     try:
         tk = Tk()
-        tk.tk_setPalette(background='yellow', foreground='black')
+        tk.tk_setPalette(background='honeydew', foreground='black')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
         tk.option_add("*Font", 'Helvetica 8')
