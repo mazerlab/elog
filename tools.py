@@ -126,6 +126,7 @@ class Database(object):
     # Singleton object -- only one of these really exists!
     # default params (env vars override these!)
     _HOST   = 'sql.mlab.yale.edu'
+    _PORT   = '3306'
     _DB = 'mlabdata'
     _USER   = 'mlab'
     _PASSWD = 'mlab'
@@ -140,11 +141,13 @@ class Database(object):
             cls._init = 0
         return cls._instance
 
-    def __init__(self, host=None, db=None, user=None, passwd=None):
+    def __init__(self, host=None, port=None, db=None, user=None, passwd=None):
         if not Database._init: return
 
         if host is None:
             self.host = _env('ELOG_HOST', Database._HOST)
+        if port is None:
+            self.port = int(_env('ELOG_PORT', Database._PORT))
         if db is None:
             self.db = _env('ELOG_DB', Database._DB)
         if user is None:
@@ -156,14 +159,19 @@ class Database(object):
 
     def connect(self):
         try:
-            self.connection = MySQLdb.connect(self.host,
-                                              self.user, self.passwd, self.db)
+            self.connection = MySQLdb.connect(host=self.host,
+                                              port=self.port,
+                                              user=self.user,
+                                              passwd=self.passwd,
+                                              db=self.db)
             self.cursor = self.connection.cursor()
             atexit.register(self._atexit)
         except MySQLdb.OperationalError as (errno, errstr):
-            sys.stderr.write("Can't connect to: %s@%s\n" % (db, host,))
+            sys.stderr.write("Can't connect to: '%s' %s@%s:%d\n" % \
+                             (self.db, self.user, self.host, self.port,))
             sys.stderr.write('Error: %s\n' % errstr)
             self.connection = None
+            sys.exit(1)
 
     def flush(self):
         self.connection.commit()
