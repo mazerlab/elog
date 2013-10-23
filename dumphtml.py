@@ -292,12 +292,15 @@ def emit_unit(outdir, db, r):
     except TypeError:
         r['e'] = F('%0.f', None)
 
-    r['crap'] = YN(r['crap'],'bad','good')
+    r['ok'] = '%s/10' % F("%.0f", r['rfx'])
+    if r['crap']:
+        r['ok'] += ' CRAP'
     r['rfx'] = F("%.0f", r['rfx'])
     r['rfy'] = F("%.0f", r['rfy'])
     r['rfr'] = F("%.0f", r['rfr'])
     r['ori'] = F("%.0f", r['ori'])
     r['color'] = F("%s", r['color'])
+    r['latency'] = F("%.0f", r['latency'])
 
     r['note'] = nlsqueeze(wrap(r['note']))
 
@@ -310,8 +313,9 @@ def emit_unit(outdir, db, r):
         """        <tr> <td align="RIGHT"><b>WELL</b>:</td>   <td> %(well)s (%(wellloc)s)</t          </tr>\n""" \
         """        <tr> <td align="RIGHT"><b>AREA</b>:</td>   <td> %(area)s</td>                      </tr>\n""" \
         """        <tr> <td align="RIGHT"><b>DEPTH</b>:</td>  <td> %(depth)s um</td>                  </tr>\n""" \
-        """        <tr> <td align="RIGHT"><b>CRAP</b>:</td>   <td> %(crap)s</td>                      </tr>\n""" \
+        """        <tr> <td align="RIGHT"><b>QUAL</b>:</td>   <td> %(ok)s</td>                        </tr>\n""" \
         """        <tr> <td align="RIGHT"><b>RF</b>:</td>     <td> (%(rfx)s, %(rfy)s) e=%(e)s px</td> </tr>\n""" \
+        """        <tr> <td align="RIGHT"><b>LAT</b>:</td>    <td> %(latency)s ms</td>                </tr>\n""" \
         """        <tr> <td align="RIGHT"><b>ORI</b>:</td>    <td> %(ori)s deg</td>                   </tr>\n""" \
         """        <tr> <td align="RIGHT"><b>COLOR</b>:</td>  <td> %(color)s</td>                     </tr>\n""" \
         """      </table>\n""" \
