@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+# -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
+
+"""
+Plot weight and fluid history for specified monkey.
+
+"""
+
+
+import sys
+import os
+import string
+import MySQLdb
+import types
+
+import numpy as np
+import matplotlib.pyplot as pyplot
+from scipy.interpolate import spline
+
+def row2dict(descr, row):
+    """
+    Convert a SQL query result-row into a dictionary.
+    """
+    dict = {}
+    for k in range(len(descr)):
+        if row[k] is None:
+            dict[descr[k][0]] = ''
+        else:
+            dict[descr[k][0]] = row[k]
+    return dict
+
+class DB:
+    host='sql.mlab.yale.edu'
+    user='dbusernopass'
+    passwd=''
+    db='mlabdata'
+    def __init__(self):
+
+        self.connection = MySQLdb.connect(DB.host,
+                                          DB.user,
+                                          DB.passwd,
+                                          DB.db)
+        self.cursor = self.connection.cursor()
+
+    def q(self, cmd):
+        try:
+            self.cursor.execute(cmd)
+            descr = self.cursor.description
+            rows = self.cursor.fetchall()
+            dicts = []
+            for row in rows:
+                dicts.append(row2dict(descr, row))
+            return (1, dicts)
+        except MySQLdb.Error, e:
+            (number, msg) = e.args
+            return (None, e)
+
+if __name__ == '__main__':
+    if len(sys.argv) <= 1:
+        sys.stderr.write('usage: qweights animal [lastn]\n')
+        sys.exit(1)
+
+    animal = sys.argv[1]
+    if len(sys.argv) > 2:
+        lastn = int(sys.argv[2])
+    else:
+        lastn = None
+
+    db = DB()
+
+    weightx = []
+    weighty = []
+    threshx = []
+    threshy = []
+    waterx = []
+    watery = []
+    (ok, rows) = db.q("""SELECT * """
+                      """ FROM session WHERE animal LIKE "%s" """
+                      """ ORDER BY date""" % animal)
+    for r in rows:
+        if not isinstance(r['date'], types.StringType):
+            weightx.append(r['date'])
+            waterx.append(r['date'])
+            if not isinstance(r['weight'], types.StringType):
+                weighty.append(r['weight'])
+            else:
+                weighty.append(np.nan)
+                
+            if not isinstance(r['thweight'], types.StringType):
+                threshx.append(r['date'])
+                threshy.append(r['thweight'])
+            else:
+                threshx.append(r['date'])
+                threshy.append(np.nan)
+
+            water = 0
+
+            if not isinstance(r['water_work'], types.StringType):
+                water = r['water_work']
+            if not isinstance(r['water_sup'], types.StringType):
+                water = r['water_sup']
+            if water > 5000:
+                print '%s' % r['date']
+            if water > 0:
+                watery.append(water)
+            else:
+                watery.append(np.nan)
+
+    if lastn:
+        weightx = weightx[-lastn:]
+        weighty = weighty[-lastn:]
+        waterx = waterx[-lastn:]
+        watery = watery[-lastn:]
+
+    pyplot.subplot(4,1,1)
+    pyplot.xticks(rotation=45)
+    pyplot.plot(weightx, weighty, 'x-', threshx, threshy, 'r-')
+    pyplot.title(animal)
+    pyplot.ylabel('weight (kg)')
+
+    pyplot.subplot(4,1,3)
+    pyplot.xticks(rotation=45)
+    pyplot.plot(waterx, watery, 'x-')
+    pyplot.ylabel('fluid (ml)')
+
+    pyplot.show()
+
+
+
+

@@ -23,8 +23,9 @@ install2:
 	sed s^%%LIB%%^/auto/share/lib^g \
 		<elogatt.template >/auto/share/bin/elogatt
 	chmod +x /auto/share/bin/elogatt
-	cp dbfind dbfind.m elogatt.m /auto/share/pypeextra/
+	cp dbfind dbfind.m elogatt.m qhistory /auto/share/pypeextra/
 	chmod +x /auto/share/pypeextra/dbfind
+	chmod +x /auto/share/pypeextra/qhistory
 
 testdata:
 	mysqldump -hsql -umlab -pmlab \
