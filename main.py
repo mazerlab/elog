@@ -684,18 +684,19 @@ class ExperWindow(Frame):
 
         d = self.rv.getall()
 
-        # get list of datafiles
-        rows = self.db.query("""SELECT src FROM dfile"""
-                             """ WHERE exper='%s' AND date='%s'"""
-                             """ ORDER BY dfileID""" % (exper, date,))
-        nr = 3
-        self.dfiles = []
-        for row in rows:
-            w = DatafileFrame(self, self.db, row['src'], \
-                              borderwidth=2, relief=RIDGE)
-            w.grid(row=nr, column=0, sticky=E+W)
-            self.dfiles.append(w)
-            nr = nr + 1
+        if GuiWindow.showdatafiles.get():
+            # get list of datafiles
+            rows = self.db.query("""SELECT src FROM dfile"""
+                                 """ WHERE exper='%s' AND date='%s'"""
+                                 """ ORDER BY dfileID""" % (exper, date,))
+            nr = 3
+            self.dfiles = []
+            for row in rows:
+                w = DatafileFrame(self, self.db, row['src'], \
+                                  borderwidth=2, relief=RIDGE)
+                w.grid(row=nr, column=0, sticky=E+W)
+                self.dfiles.append(w)
+                nr = nr + 1
 
     def save(self):
         """
@@ -900,16 +901,6 @@ class SessionWindow(Frame):
 
         self.n = 1e6
 
-    def textview(self):
-        d = self.rv.getall()
-        rows = self.db.query("""SELECT * FROM session """
-                             """ WHERE animal='%s' AND date='%s'""" %
-                             (d['animal'], d['date'],))
-        if len(rows) == 0:
-            warn(self, 'nothing to see!')
-        else:
-            textwarn('db view', rep_note(self.db, rows[0]))
-
     def find(self):
         s = ask(self, 'find (YYYY-MM-DD)', '')
         if s:
@@ -966,16 +957,22 @@ class GuiWindow(Frame):
                          command=self.quit)
 
         menu.addmenu('Edit', '', '')
-        menu.addmenuitem('Edit', 'command', label='Text View',
-                         command=lambda s=self: s.session.textview())
         menu.addmenuitem('Edit', 'command', label='Find session by date (Alt-G)',
                          command=lambda s=self: s.session.find())
         menu.addmenuitem('Edit', 'separator')
+
         GuiWindow.showlinks = IntVar()
         GuiWindow.showlinks.set(0)
 
         GuiWindow.showdel = IntVar()
         GuiWindow.showdel.set(0)
+
+        GuiWindow.showdatafiles = IntVar()
+        GuiWindow.showdatafiles.set(1)
+
+        menu.addmenuitem('Edit', 'checkbutton', label='show data files',
+                         variable=GuiWindow.showdatafiles,
+                         command=lambda s=self:s.jump(0))
 
         menu.addmenuitem('Edit', 'checkbutton', label='show links',
                          variable=GuiWindow.showlinks,
