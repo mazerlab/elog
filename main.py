@@ -894,6 +894,7 @@ class SessionWindow(Frame):
             self.rv.setval("water_work", "")
             self.rv.setval("water_sup", "")
             self.rv.setval("fruit", "")
+            self.rv.setval("fruit_ml", "")
             self.rv.setval("weight", "")
             self.rv.setval("note", "")
             self.rv.setval("ncorrect", "0")

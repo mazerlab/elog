@@ -10,17 +10,18 @@ from tools import *
 
 SESSION_FIELDS = (
     # sessionID
-    ("animal",          None, None, DISABLED, 10,      (0, 0, 1), ),
-    ("user",            None, None, NORMAL, 10,      (1, 0, 1), ),
+    ("animal",          None, None, DISABLED, 10,  (0, 0, 1), ),
+    ("user",            None, None, NORMAL, 10,    (1, 0, 1), ),
     ("restricted",      BOOL, int, NORMAL, 0,      (2, 0, 1), ),
     
-    ("date",            None, sdate, DISABLED, 12,      (0, 1, 1), ),
-    ("computer",        None, None, NORMAL, 10,      (1, 1, 1), ),
+    ("date",            None, sdate, DISABLED, 12, (0, 1, 1), ),
+    ("computer",        None, None, NORMAL, 10,    (1, 1, 1), ),
     ("tested",          BOOL, int, NORMAL, 0,      (2, 1, 1), ),
     
     ("water_work",      INTEGER, int, NORMAL, 10,  (0, 3, 1), ),
     ("water_sup",       INTEGER, int, NORMAL, 10,  (1, 3, 1), ),
-    ("fruit",           None, None, NORMAL, 0,       (2, 3, 1), ),
+    ("fruit",           None, None, NORMAL, 0,     (2, 3, 1), ),
+    ("fruit_ml",        INTEGER, int, NORMAL, 10,  (3, 3, 1), ),
 
     ("food",            INTEGER, int, NORMAL, 5,   (0, 4, 1), ),
     ("weight",          REAL, float, NORMAL, 5,    (1, 4, 1), ),
