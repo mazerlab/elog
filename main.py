@@ -1150,7 +1150,7 @@ mlab database-backed electronic log notebook tool
 usage: %s [options] [date] [exper]
 
 General options:
-  -ro                      read only mode!
+  -r                       read only mode!
   -info                    list animals in database to stdout (and exit)
   -q                       query animal and date info from user
   -animal=<animal name>    select animal *FULL NAME, NOT ABBREV*
@@ -1233,15 +1233,15 @@ def start():
         if arg[0:2] == '--':
             arg = arg[1:]
 
-        if isarg(arg, '-init'):
+        if isarg(arg, '--init'):
             init = 1
         elif isarg(arg, '-y'):
             force_yes = 1
-        elif isarg(arg, '-ro'):
+        elif isarg(arg, '-r') or isarg(arg, '--readonly'):
             readonly = 1
-        elif isarg(arg, '-info'):
+        elif isarg(arg, '-info') or isarg(arg, '--info'):
             info = 1
-        elif isarg(arg, '-q'):
+        elif isarg(arg, '-q') or isarg(arg, '--query'):
             require_tk(tk)
             animal = tkdialogs.select(find_animals(Database()))
             if animal is None:
@@ -1250,47 +1250,47 @@ def start():
             date = tkdialogs.getdate(tk)
             if date is None:
                 sys.exit(0)
-        elif isarg(arg, '-animal='):
+        elif isarg(arg, '-animal=') or isarg(arg, '--animal='):
             animal = string.split(arg, '=')[1]
-        elif isarg(arg, '-animal'):
+        elif isarg(arg, '-animal') or isarg(arg, '--animal'):
             require_tk(tk)
             animal = tkdialogs.select(find_animals(Database()))
             if animal is None:
                 sys.exit(0)
         elif isarg(arg, '-a'):
             animal = arg[2:]
-        elif isarg(arg, '-new'):
+        elif isarg(arg, '-new') or isarg(arg, '--new'):
             new = 1
-        elif isarg(arg, '-date='):
+        elif isarg(arg, '-date=') or isarg(arg, '--date='):
             date = string.split(arg, '=')[1]
-        elif isarg(arg, '-date'):
+        elif isarg(arg, '-date') or isarg(arg, '--date'):
             require_tk(tk)
             date = tkdialogs.getdate(tk)
             if date is None:
                 sys.exit(0)
-        elif isarg(arg, '-exper='):
+        elif isarg(arg, '-exper=') or isarg(arg, '--exper='):
             exper = string.split(arg, '=')[1]
-        elif isarg(arg, '-today'):
+        elif isarg(arg, '-today') or isarg(arg, '--today'):
             date = '%s' % datetime.date(1,1,1).today()
-        elif isarg(arg, '-last'):
+        elif isarg(arg, '-last') or isarg(arg, '--last'):
             last = 1
-        elif isarg(arg, '-dump='):
+        elif isarg(arg, '-dump=') or isarg(arg, '--dump='):
             dump = 1
             count = int(string.split(arg, '=')[1])
-        elif isarg(arg, '-dump'):
+        elif isarg(arg, '-dump') or isarg(arg, '--dump'):
             dump = 1
             count = 0
-        elif isarg(arg, '-out='):
+        elif isarg(arg, '-out=') or isarg(arg, '--out='):
             outdir = string.split(arg, '=')[1]
-        elif isarg(arg, '-rev'):
+        elif isarg(arg, '-rev') or isarg(arg, '--rev'):
             rev = 1
-        elif isarg(arg, '-data'):
+        elif isarg(arg, '-data') or isarg(arg, '--data'):
             dfile = 1
             force = None
-        elif isarg(arg, '-forcedata'):
+        elif isarg(arg, '-forcedata') or isarg(arg, '--forcedata'):
             dfile = 1
             force = 1
-        elif isarg(arg, '-help'):
+        elif isarg(arg, '-help') or isarg(arg, '--help'):
             usage()
         elif os.path.exists(arg):
             # datafile to add
@@ -1302,8 +1302,11 @@ def start():
             exper = arg
         elif re.match('^[0-9]...-[0-9].-[0-9].*$', arg):
             date = arg
-        else:
+        elif arg in find_animals(Database()):
             animal = arg
+        else:
+            sys.stderr.write('unknown arg: %s\n' % arg)
+            sys.exit(1)
 
     (_animal, _date) = cachestate()
     if not dump and animal is None:
