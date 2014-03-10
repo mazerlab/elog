@@ -1,10 +1,11 @@
 #!/bin/sh
-mysql -hsql -umlab -pmlab <<EOF
--- MySQL dump 10.13  Distrib 5.5.34, for debian-linux-gnu (x86_64)
+mysqladmin -hsql -umlab -pmlab create mlabdata <<EOF
+mysql -hsql -umlab -pmlab mlabdata <<EOF
+-- MySQL dump 10.13  Distrib 5.5.35, for debian-linux-gnu (x86_64)
 --
 -- Host: sql    Database: mlabdata
 -- ------------------------------------------------------
--- Server version	5.1.70-0ubuntu0.10.04.1
+-- Server version	5.1.73-0ubuntu0.10.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -67,7 +68,7 @@ CREATE TABLE `dfile` (
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `dfileID` (`dfileID`),
   UNIQUE KEY `src` (`src`)
-) ENGINE=MyISAM AUTO_INCREMENT=17565 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=17698 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -90,7 +91,7 @@ CREATE TABLE `exper` (
   `tags` varchar(1024) DEFAULT NULL,
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `experID` (`experID`)
-) ENGINE=MyISAM AUTO_INCREMENT=3367 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3436 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -110,8 +111,13 @@ CREATE TABLE `session` (
   `tested` int(11) DEFAULT NULL,
   `water_work` int(11) DEFAULT NULL,
   `water_sup` int(11) DEFAULT NULL,
+  `dtb` double DEFAULT NULL,
+  `dtb_ml` double DEFAULT NULL,
+  `xdtb` double DEFAULT NULL,
+  `xdtb_ml` double DEFAULT NULL,
   `fruit` varchar(255) DEFAULT NULL,
   `fruit_ml` int(11) DEFAULT NULL,
+  `totalfluid` double DEFAULT NULL,
   `food` int(11) DEFAULT NULL,
   `weight` double DEFAULT NULL,
   `thweight` double DEFAULT NULL,
@@ -122,7 +128,7 @@ CREATE TABLE `session` (
   `tags` varchar(1024) DEFAULT NULL,
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `noteID` (`sessionID`)
-) ENGINE=MyISAM AUTO_INCREMENT=4280 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=4380 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,5 +176,5 @@ CREATE TABLE `unit` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-24 10:51:06
+-- Dump completed on 2014-03-10 16:37:00
 EOF

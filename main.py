@@ -13,8 +13,9 @@ import os
 import datetime
 import time
 import re
+import numpy as np
 
-# from keyboard import keyboard
+from keyboard import keyboard
 try:
     import parsedatetime as pdt
 except:
@@ -30,6 +31,8 @@ from tools import *
 import dumphtml
 import layout
 import initdb
+
+MINDTB = 10.0
 
 def attach(tk, db, im=None, title='no title', note='',
            srctable=None, srcID=None):
@@ -239,7 +242,12 @@ class RecordView(Frame):
         elist = []
         elist_by_col = {}
         for fd in fields:
-            (fieldname, validator, converter, state, sz, pos) = fd
+            (fieldname, validator, converter, state, sz, pos, callback) = fd
+            s = fieldname.split()
+            if len(s) > 1:
+                sqlname = s[0]
+            else:
+                sqlname = fieldname
             (row, col, cspan) = pos
             if not elist_by_col.has_key(col):
                 elist_by_col[col] = []
@@ -250,8 +258,12 @@ class RecordView(Frame):
                                  label_text=fieldname,
                                  dropdown=1)
                 if sz: e.component('entry')['width'] = sz
-                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W)
+                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
                 e.component('entry')['state'] = state
+                if state == DISABLED:
+                    e.component('label')['fg'] = 'red'
+                else:
+                    e.component('label')['fg'] = 'blue'
             elif validator == TEXT:
                 (w, h) = sz
                 e = Pmw.ScrolledText(self.frame2,
@@ -266,22 +278,32 @@ class RecordView(Frame):
                 else:
                     e.component('text').tag_config('experlink', foreground='red')
                 e.component('text')['state'] = state
+                if state == DISABLED:
+                    e.component('label')['fg'] = 'red'
+                else:
+                    e.component('label')['fg'] = 'blue'
+
             elif validator == BOOL:
                 e = Checkbutton2(self.frame1, text=fieldname, state=state)
-                e.grid(row=row, column=col, columnspan=cspan, sticky=W)
+                e.grid(row=row, column=col, columnspan=cspan, sticky=W, padx=3)
+
             else:
                 e = Pmw.EntryField(self.frame1, labelpos='w',
                                    label_text=fieldname, validate=validator)
                 if sz: e.component('entry')['width'] = sz
-                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W)
+                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
                 e.component('entry')['state'] = state
+                if state == DISABLED:
+                    e.component('label')['fg'] = 'red'
+                else:
+                    e.component('label')['fg'] = 'blue'
 
             elist.append(e)
             elist_by_col[col].append(e)
 
-            self._entries[fieldname] = e
-            self._validators[fieldname] = validator
-            self._converters[fieldname] = converter
+            self._entries[sqlname] = e
+            self._validators[sqlname] = validator
+            self._converters[sqlname] = converter
 
         for col in elist_by_col.keys():
             Pmw.alignlabels(elist_by_col[col])
@@ -755,10 +777,10 @@ class SessionWindow(Frame):
         self.n = 0
 
         f = Frame(self)
-        self.datew = Label(f, text="", fg='blue', anchor=W)
-        self.datew.pack(side=LEFT, fill=X, expand=1)
+        #self.datew = Label(f, text="", fg='blue', anchor=W)
+        #self.datew.pack(side=LEFT, fill=X, expand=1)
 
-        self.status = Label(f, text="", fg='red', anchor=E)
+        self.status = Label(f, text="", fg='red', anchor=W, relief=SUNKEN)
         self.status.pack(side=LEFT, fill=X, expand=1)
 
         f.pack(side=TOP, fill=X, expand=0, pady=2)
@@ -803,10 +825,13 @@ class SessionWindow(Frame):
                              """ ORDER BY exper ASC""" %
                              (d['animal'], d['date'],))
 
-        dstr = time.strftime('%a %Y-%m-%d',
+        dstr = time.strftime('%Y-%m-%d [%a]',
                              time.strptime(d['date'], '%Y-%m-%d'))
-        self.datew.configure(text='%s :: %s     [%s@%s]' % \
-                             (d['animal'], dstr, self.db.db, self.db.host))
+        #self.datew.configure(text='%s :: %s     [%s@%s]' % \
+        #                     (d['animal'], dstr, self.db.db, self.db.host))
+
+        GuiWindow.root.winfo_toplevel().title('%s %s' % \
+                                                  (d['animal'], dstr))
 
         # cache pointer to last record accessed in homedir for next time
         cachestate(d['animal'], d['date'])
@@ -939,9 +964,13 @@ class SessionWindow(Frame):
         return missing
 
 class GuiWindow(Frame):
+    root = None
     def __init__(self, master, db, animal='%', **kwargs):
+        
         self.animal = animal
         self.db = db
+
+        GuiWindow.root = master
 
         Frame.__init__(self, master, **kwargs)
 
@@ -973,15 +1002,15 @@ class GuiWindow(Frame):
 
         menu.addmenuitem('Edit', 'checkbutton', label='show data files',
                          variable=GuiWindow.showdatafiles,
-                         command=lambda s=self:s.jump(0))
+                         command=lambda s=self:s.refresh())
 
         menu.addmenuitem('Edit', 'checkbutton', label='show links',
                          variable=GuiWindow.showlinks,
-                         command=lambda s=self:s.jump(0))
+                         command=lambda s=self:s.refresh())
 
         menu.addmenuitem('Edit', 'checkbutton', label='show deleted',
                          variable=GuiWindow.showdel,
-                         command=lambda s=self:s.jump(0))
+                         command=lambda s=self:s.refresh())
 
         menu.addmenuitem('Edit', 'command', label='tagtest',
                          command=lambda tk=master: tag_select(tk))
@@ -1002,7 +1031,7 @@ class GuiWindow(Frame):
                   fg='red', padx=10).pack(side=LEFT, expand=0)
 
         b = Button(menuhull, text='Refresh',
-                   command=lambda s=self: s.jump(0))
+                   command=lambda s=self: s.refresh())
         createToolTip(b, 'refresh gui window (Alt-R)')
         b.pack(side=LEFT)
 
@@ -1056,11 +1085,43 @@ class GuiWindow(Frame):
             self.session = None
         self.animal = animal
         self.jump(1e6)
-        tk.winfo_toplevel().title('elog:%s' % animal)
+        #tk.winfo_toplevel().title('elog:%s' % animal)
+
+    def refresh(self):
+        self.jump(0)
 
     def jump(self, n, save=1):
         if self.session:
             n = self.session.n + n
+            # update dtb.. get last 7 testing dayes
+            animal = self.session.rv.getval('animal')
+            date = self.session.rv.getval('date')
+            kg = self.session.rv.getval('weight')
+            rows = self.db.query("""SELECT date,water_work,weight FROM """\
+                                 """ session WHERE""" \
+                                 """ animal='%s' and date<'%s' and""" \
+                                 """ water_work > 0 and"""\
+                                 """ restricted=1 and tested=1 ORDER""" \
+                                 """ BY date DESC LIMIT 7""" % \
+                                 (self.animal, date,))
+            wt = np.array([r['weight'] for r in rows])
+            dt = np.array([r['water_work'] for r in rows]) / wt
+            xdtb = np.mean(dt) - 2.0 * np.std(dt)
+            dtb = max(MINDTB, xdtb)
+            self.session.rv.setval('xdtb', round(xdtb,1))
+            self.session.rv.setval('dtb', round(dtb,1))
+            if kg is None:
+                warn(self, 'DTB Calc: Please enter weight.')
+            else:
+                self.session.rv.setval('dtb_ml', round(dtb*kg,1))
+                self.session.rv.setval('xdtb_ml', round(xdtb*kg,1))
+
+            tf = 0.0
+            for x in ['water_work', 'water_sup', 'fruit_ml']:
+                f = self.session.rv.getval(x)
+                if f is not None: tf += f
+            self.session.rv.setval('totalfluid', tf)
+                
             if save:
                 self.session.save()
             self.session.destroy()
@@ -1219,7 +1280,7 @@ def start():
 
     try:
         tk = Tk()
-        tk.tk_setPalette(background='honeydew', foreground='black')
+        #tk.tk_setPalette(background='honeydew', foreground='black')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
         tk.option_add("*Font", 'Helvetica 8')
@@ -1416,7 +1477,7 @@ def start():
     logwin.bind_all('<Alt-KeyPress-n>',
                     lambda e, w=logwin: w.new_exper())
     logwin.bind_all('<Alt-KeyPress-r>',
-                    lambda e, w=logwin: w.jump(0))
+                    lambda e, w=logwin: w.refresh())
     logwin.bind_all('<Alt-KeyPress-Next>',
                     lambda e, w=logwin: w.jump(1))
     logwin.bind_all('<Alt-KeyPress-Prior>',
@@ -1430,8 +1491,9 @@ def start():
     logwin.bind_all('<Alt-Control-End>',
                     lambda e, w=logwin: w.jump(1e6))
 
-    tk.winfo_toplevel().title('elog:%s' % animal)
+    #tk.winfo_toplevel().title('elog:%s' % animal)
     tk.protocol("WM_DELETE_WINDOW", logwin.quit)
     tk.deiconify()
+    logwin.jump(0)
     tk.wait_window(logwin)
 
