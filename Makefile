@@ -3,18 +3,18 @@
 MODULES=*.py
 
 test-inplace:
-	sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
+	@sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elog.template >./elog
-	sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
+	@sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elogatt.template >./elogatt
-	chmod +x ./dbfind
-	chmod +x ./elog
-	chmod +x ./elogatt
+	@chmod +x ./dbfind
+	@chmod +x ./elog
+	@chmod +x ./elogatt
 
 install:
-	sudo make install2
+	sudo make install_
 
-install2:
+install_:
 	rm -rf /auto/share/lib/elog
 	mkdir /auto/share/lib/elog
 	cp $(MODULES) /auto/share/lib/elog
@@ -28,10 +28,12 @@ install2:
 	chmod +x /auto/share/pypeextra/qhistory
 	chmod +x /auto/share/pypeextra/eloghist
 
+# dump live database for testing using 'test-elog'
 testdata:
 	mysqldump -hsql -umlab -pmlab \
 			--add-drop-database --databases mlabdata | \
 		sed s/mlabdata/mlabdata_test/g | gzip >testdata.sql.gz
+
 
 
 clean:
