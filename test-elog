@@ -22,6 +22,7 @@ if [ "$1" = "-r" ]; then
   mysqladmin --force -h$host -u$user -p$pass drop mlabdata_test
   mysqladmin --force -h$host -u$user -p$pass create mlabdata_test
   gunzip <testdata.sql.gz | mysql -h$host -u$user -p$pass mlabdata_test
+  exit
 fi
 if [ "$1" = "-a" ]; then
   echo "testing elogatt"

@@ -33,6 +33,7 @@ testdata:
 	mysqldump -hsql -umlab -pmlab \
 			--add-drop-database --databases mlabdata | \
 		sed s/mlabdata/mlabdata_test/g | gzip >testdata.sql.gz
+	./test-elog -r
 
 
 

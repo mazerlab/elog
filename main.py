@@ -7,6 +7,14 @@
 #       + UNIT: one per isolated unit (many per EXPER)
 #       + DFILE: one per datafile/run (many per EXPER)
 
+#
+#
+# Wed Mar 26 17:43:19 2014 mazer -- TODO for attachments:
+#  - for in-text attachments, still need to figure out a way to
+#    go through and find attachments w/o links...
+#  - need to add support for these in dump files
+#
+
 import string
 import sys
 import os
@@ -33,6 +41,27 @@ import layout
 import initdb
 
 MINDTB = 10.0
+logwin = None
+
+def ins_attachment(event, w):
+    """Insert current timestamp into text widget.
+    """
+    id = attach(w, w.db, im=None, title='',
+                srctable='in-text', srcID=0)
+    txt = event.widget
+    tag = '<elog:attach=%d>' % id
+    txt.mark_set('tmp', INSERT)
+    txt.mark_gravity('tmp', LEFT)
+    txt.insert(INSERT, tag)
+    txt.tag_add('attachlink', txt.index('tmp'), INSERT)
+    txt.mark_unset('tmp')
+
+    b = Button(txt)
+    b.im = pil_getattach(w.db, id, (40,40))
+    b.config(image=b.im,
+             command=lambda m=w,db=w.db,id=id: \
+             AttachmentViewer(m,db,id))
+    txt.window_create(INSERT, window=b, padx=10)
 
 def attach(tk, db, im=None, title='no title', note='',
            srctable=None, srcID=None):
@@ -90,6 +119,22 @@ def tag_select(parent):
     else:
         return None
 
+def pil_getattach(db, id, size=None):
+    import PIL.Image
+    import StringIO
+    import ImageTk
+
+    rows = db.query("""SELECT * FROM attachment"""
+                    """ WHERE attachmentID=%d""" % (id,))
+    if len(rows) == 0:
+        return None
+    imstr = rows[0]['data'].decode('base64')
+    p = PIL.Image.open(StringIO.StringIO(imstr))
+    if size:
+        p.thumbnail(size)
+    im = ImageTk.PhotoImage(p)
+    return im
+
 class AttachmentViewer(Toplevel):
     attachmentList = {}
 
@@ -117,7 +162,7 @@ class AttachmentViewer(Toplevel):
         Button(bb, text='delete', \
                command=self.db_delete).pack(side=LEFT, expand=0)
 
-        self.rv = RecordView(f, layout.ATTACHMENT_FIELDS, self.db)
+        self.rv = RecordView(f, layout.ATTACHMENT_FIELDS, self.db, False)
         self.rv.pack(side=TOP, expand=1, fill=BOTH)
         self.rv.setall(self.rows)
 
@@ -222,7 +267,7 @@ class Checkbutton2(Frame):
         return v
 
 class RecordView(Frame):
-    def __init__(self, master, fields, db, **kwargs):
+    def __init__(self, master, fields, db, allowattach, **kwargs):
         import types
 
         Frame.__init__(self, master, **kwargs)
@@ -261,9 +306,9 @@ class RecordView(Frame):
                 e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
                 e.component('entry')['state'] = state
                 if state == DISABLED:
-                    e.component('label')['fg'] = 'red'
-                else:
                     e.component('label')['fg'] = 'blue'
+                else:
+                    e.component('label')['fg'] = 'black'
             elif validator == TEXT:
                 (w, h) = sz
                 e = Pmw.ScrolledText(self.frame2,
@@ -272,16 +317,24 @@ class RecordView(Frame):
                                      labelpos='w', label_text=fieldname)
                 e.pack(expand=1, fill=BOTH)
                 e.component('text').bind('<Alt-t>', ins_time)
+                if allowattach:
+                    e.component('text').bind('<Alt-a>', \
+                                             lambda e, s=self: \
+                                             ins_attachment(e, s))
                 e.component('text').configure(wrap=WORD)
                 if not GuiWindow.showlinks.get():
                     e.component('text').tag_config('experlink', elide=1)
+                    e.component('text').tag_config('attachlink', elide=1)
                 else:
-                    e.component('text').tag_config('experlink', foreground='red')
+                    e.component('text').tag_config('experlink', \
+                                                   foreground='red')
+                    e.component('text').tag_config('attachlink', \
+                                                   foreground='red')
                 e.component('text')['state'] = state
                 if state == DISABLED:
-                    e.component('label')['fg'] = 'red'
-                else:
                     e.component('label')['fg'] = 'blue'
+                else:
+                    e.component('label')['fg'] = 'black'
 
             elif validator == BOOL:
                 e = Checkbutton2(self.frame1, text=fieldname, state=state)
@@ -294,9 +347,9 @@ class RecordView(Frame):
                 e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
                 e.component('entry')['state'] = state
                 if state == DISABLED:
-                    e.component('label')['fg'] = 'red'
-                else:
                     e.component('label')['fg'] = 'blue'
+                else:
+                    e.component('label')['fg'] = 'black'
 
             elist.append(e)
             elist_by_col[col].append(e)
@@ -324,8 +377,7 @@ class RecordView(Frame):
                 txt = self._entries[name].component('text')
                 begin = '0.0'
                 while 1:
-                    # iterate over all intact exper hyperlinks and insert a
-                    # an exper widget
+                    # replace EXPER hyperlinks w/ exper widgets
                     begin = txt.search('<elog:exper=.*>',
                                      begin, stopindex=END, regexp=1)
                     if not begin:
@@ -344,6 +396,31 @@ class RecordView(Frame):
                             self._children.append(ew)
                             self._children_info[ew] = 'exper:%s' % exper
                         begin = end
+                begin = '0.0'
+                while 1:
+                    # replace ATTACHMENT hyperlinks w/ buttons
+                    begin = txt.search('<elog:attach=.*>',
+                                     begin, stopindex=END, regexp=1)
+                    if not begin:
+                        break
+                    end = txt.search('>', begin, stopindex=END)
+                    if end:
+                        end = end+'+1c'
+                        txt.tag_add('attachlink', begin, end)
+                        id = int(txt.get(begin, end)[1:-1].split('=')[1])
+                        im = pil_getattach(self.db, id, (40,40))
+                        if im is None:
+                            # attachement delted -- go ahead and delete link
+                            txt.delete(begin,end)
+                        else:
+                            b = Button(txt)
+                            b.im = im
+                            b.config(image=b.im,
+                                     command=lambda m=self,db=self.db,id=id: \
+                                     AttachmentViewer(m,db,id))
+                            txt.window_create(end, window=b, padx=10)
+                        begin = end
+                
                 txt.see(END)
 
     def setall(self, dict):
@@ -438,7 +515,7 @@ class DatafileFrame(Frame):
         f = Frame(self)
         f.pack(expand=1, fill=X)
 
-        self.rv = RecordView(self, layout.DFILE_FIELDS, db)
+        self.rv = RecordView(self, layout.DFILE_FIELDS, db, False)
         self.rv.pack(expand=1, fill=BOTH)
         self.rv.setall(rows[0])
         self.dfileID = rows[0]['dfileID']
@@ -520,7 +597,7 @@ class UnitWindow:
         b.pack(side=TOP, anchor=W)
         createToolTip(b, 'delete unit from database forever!')
 
-        self.rv = RecordView(page, layout.UNIT_FIELDS, db)
+        self.rv = RecordView(page, layout.UNIT_FIELDS, db, False)
         self.rv.pack(side=TOP, expand=1, fill=BOTH)
 
         d = self.exper.rv.getall()
@@ -632,7 +709,7 @@ class ExperWindow(Frame):
         createToolTip(b, 'create new unit (TTL etc)')
         b.pack(side=LEFT)
 
-        self.rv = RecordView(self, layout.EXPER_FIELDS, db)
+        self.rv = RecordView(self, layout.EXPER_FIELDS, db, False)
         self.rv.grid(row=1, column=0, sticky=E+W)
 
         self.unitbook = None
@@ -787,7 +864,7 @@ class SessionWindow(Frame):
 
         Msg(window=self.status)
 
-        self.rv = RecordView(self, layout.SESSION_FIELDS, db)
+        self.rv = RecordView(self, layout.SESSION_FIELDS, db, True)
         self.rv.pack(side=BOTTOM, fill=BOTH, expand=1)
 
     def view(self, date=None):
@@ -974,7 +1051,8 @@ class GuiWindow(Frame):
 
         Frame.__init__(self, master, **kwargs)
 
-        menu = Pmw.MenuBar(self, hull_relief=RAISED, hull_borderwidth=1)
+        menu = Pmw.MenuBar(self, hull_relief=RAISED, hull_borderwidth=1,
+                           hotkeys=False)
 
         menu.addmenu('File', '', '')
         menu.addmenuitem('File', 'command', label='force DB reconnect',
