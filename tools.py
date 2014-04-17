@@ -259,7 +259,7 @@ def ask(master, prompt, default):
     else:
         return None
 
-def warn(master, mesg, buttons=("Dismiss",)):
+def warn(master, mesg, buttons=("Dismiss",), timeout=None):
     """
     Simple warning message dialog box
     """
@@ -273,7 +273,11 @@ def warn(master, mesg, buttons=("Dismiss",)):
                           message_text=mesg)
     x = max(1, x - (w.winfo_width() / 2) - 10)
     y = max(1, y - (w.winfo_height() / 2) - 10)
-    return w.activate(geometry='+%d+%d' % (x,y))
+    if timeout:
+        w.after(timeout, lambda w=w: w.destroy())
+        w.activate(geometry='+%d+%d' % (x,y))
+    else:
+        return w.activate(geometry='+%d+%d' % (x,y))
 
 def choose(master, mesg, options):
     """

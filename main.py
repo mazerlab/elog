@@ -420,7 +420,7 @@ class RecordView(Frame):
                                      AttachmentViewer(m,db,id))
                             txt.window_create(end, window=b, padx=10)
                         begin = end
-                
+
                 txt.see(END)
 
     def setall(self, dict):
@@ -1043,7 +1043,7 @@ class SessionWindow(Frame):
 class GuiWindow(Frame):
     root = None
     def __init__(self, master, db, animal='%', **kwargs):
-        
+
         self.animal = animal
         self.db = db
 
@@ -1189,7 +1189,7 @@ class GuiWindow(Frame):
             self.session.rv.setval('xdtb', round(xdtb,1))
             self.session.rv.setval('dtb', round(dtb,1))
             if kg is None:
-                warn(self, 'DTB Calc: Please enter weight.')
+                warn(self, 'DTB Calc: Please enter weight.', timeout=1000)
             else:
                 self.session.rv.setval('dtb_ml', round(dtb*kg,1))
                 self.session.rv.setval('xdtb_ml', round(xdtb*kg,1))
@@ -1199,7 +1199,7 @@ class GuiWindow(Frame):
                 f = self.session.rv.getval(x)
                 if f is not None: tf += f
             self.session.rv.setval('totalfluid', tf)
-                
+
             if save:
                 self.session.save()
             self.session.destroy()

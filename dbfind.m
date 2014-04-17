@@ -22,7 +22,7 @@ function pf = dbfind(pattern, varargin)
 %       'all' - allow multiple matches
 %       'one' -  allow exactly one match
 %       'load' - load files (otherwise, just result names)
-%       'noload' - load files (otherwise, just result names)
+%       'noload' or 'list' - load files (otherwise, just result names)
 %
 
 %  OUTPUT
@@ -42,6 +42,7 @@ loadp2m = 1;
 
 if any(strcmp(varargin, 'load')),       loadp2m=1;      end
 if any(strcmp(varargin, 'noload')),     loadp2m=0;      end
+if any(strcmp(varargin, 'list')),       loadp2m=0;      end
 if any(strcmp(varargin, 'all')),        multiple_ok=1;  end
 if any(strcmp(varargin, 'one')),        multiple_ok=0;  end
 
