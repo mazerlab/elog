@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+# -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
+
+"""
+Get last week of data for specified animal -- for YARC/VCS monitoring
+
+"""
+
+import sys
+import os
+import string
+import MySQLdb
+import types
+import HTML
+
+import numpy as np
+
+class DB:
+    host='sql.mlab.yale.edu'
+    user='dbusernopass'
+    passwd=''
+    db='mlabdata'
+    
+    def __init__(self):
+
+        self.connection = MySQLdb.connect(DB.host,
+                                          DB.user,
+                                          DB.passwd,
+                                          DB.db)
+        self.cursor = self.connection.cursor()
+
+    def row2dict(self, descr, row):
+        """
+        Convert a SQL query result-row into a dictionary.
+        """
+        dict = {}
+        for k in range(len(descr)):
+            if row[k] is None:
+                dict[descr[k][0]] = ''
+            else:
+                dict[descr[k][0]] = row[k]
+        return dict
+
+    def q(self, cmd):
+        try:
+            self.cursor.execute(cmd)
+            descr = self.cursor.description
+            rows = self.cursor.fetchall()
+            dicts = []
+            for row in rows:
+                dicts.append(self.row2dict(descr, row))
+            return (1, dicts)
+        except MySQLdb.Error, e:
+            (number, msg) = e.args
+            return (None, e)
+
+if __name__ == '__main__':
+    if len(sys.argv) <= 1:
+        sys.stderr.write('usage: elog-weekly [date]\n')
+        sys.exit(1)
+
+    db = DB()
+    if len(sys.argv) > 1:
+        end = "'%s'" % sys.argv[1]
+    else:
+        end = 'NOW()'
+
+    (ok, rows) = db.q("""SELECT * """
+                      """ FROM session WHERE """
+                      """ DATEDIFF(%s, date) < 7 AND """
+                      """ DATEDIFF(%s, date) >= 0 AND """
+                      """ restricted > 0"""
+                      """ ORDER BY date""" % (end, end,))
+
+    dates = list(set([r['date'] for r in rows]))
+    dates.sort()
+    animals = list(set([r['animal'] for r in rows]))
+    animals.sort()
+
+    d = {}
+    t = []
+    for date in dates:
+        r = ['%s' % date,]
+        for animal in animals:
+            (ok, rows) = db.q("""SELECT weight """
+                              """ FROM session WHERE """
+                              """ date='%s' AND """
+                              """ animal LIKE "%s" """ % (date, animal))
+            if len(rows) > 0 and \
+                isinstance(rows[0]['weight'], types.FloatType):
+                r.append('%.1f' % rows[0]['weight'])
+                if d.has_key(animal):
+                    d[animal].append(rows[0]['weight'])
+                else:
+                    d[animal] = [rows[0]['weight'],]
+            else:
+                r.append(' ')
+        t.append(r)
+
+    r = ['mean',]
+    for animal in animals:
+        try:
+            r.append('%.1f' % np.mean(d[animal]))
+        except KeyError:
+            r.append(' ')
+    t.append(r)
+
+    sys.stdout.write('<H1>Mazer Lab NHP Weights Summary</H1>\n')
+    sys.stdout.write('<H2>\n%s - %s</H2>\n' % \
+                     (dates[0], dates[-1]))
+    htmlcode = HTML.table(t, header_row=['date'] + animals)
+    sys.stdout.write(htmlcode)
