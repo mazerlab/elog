@@ -27,6 +27,8 @@ install_:
 	chmod +x /auto/share/pypeextra/dbfind
 	chmod +x /auto/share/pypeextra/qhistory
 	chmod +x /auto/share/pypeextra/eloghist
+	cp elog-gen-weekly-* /auto/share/pypeextra
+	chmod +x /auto/share/pypeextra/elog-gen-weekly-*
 
 # dump live database for testing using 'test-elog'
 testdata:

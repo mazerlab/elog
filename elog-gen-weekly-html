@@ -6,14 +6,19 @@ Get last week of data for specified animal -- for YARC/VCS monitoring
 
 """
 
+import sys; sys.path.append('/auto/share/lib/elog')
+
 import sys
 import os
 import string
 import MySQLdb
 import types
+import datetime, time
 import HTML
 
 import numpy as np
+
+DAYS = ['Mon', 'Tues', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun']
 
 class DB:
     host='sql.mlab.yale.edu'
@@ -55,7 +60,7 @@ class DB:
             return (None, e)
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1:
+    if 0 and len(sys.argv) <= 1:
         sys.stderr.write('usage: elog-weekly [date]\n')
         sys.exit(1)
 
@@ -67,7 +72,7 @@ if __name__ == '__main__':
 
     (ok, rows) = db.q("""SELECT * """
                       """ FROM session WHERE """
-                      """ DATEDIFF(%s, date) < 7 AND """
+                      """ DATEDIFF(%s, date) <= 7 AND """
                       """ DATEDIFF(%s, date) >= 0 AND """
                       """ restricted > 0"""
                       """ ORDER BY date""" % (end, end,))
@@ -80,24 +85,27 @@ if __name__ == '__main__':
     d = {}
     t = []
     for date in dates:
-        r = ['%s' % date,]
+        r = ['%s' % DAYS[date.weekday()], '%s' % date,]
         for animal in animals:
-            (ok, rows) = db.q("""SELECT weight """
+            (ok, rows) = db.q("""SELECT weight,thweight """
                               """ FROM session WHERE """
                               """ date='%s' AND """
                               """ animal LIKE "%s" """ % (date, animal))
             if len(rows) > 0 and \
                 isinstance(rows[0]['weight'], types.FloatType):
-                r.append('%.1f' % rows[0]['weight'])
+                w = rows[0]['weight']
+                bw = rows[0]['thweight'] / 0.85
+                pbaseline = 100.0 * w / (rows[0]['thweight'] / 0.85)
+                r.append('%.1f (%.0f%%)' % (w, pbaseline))
                 if d.has_key(animal):
                     d[animal].append(rows[0]['weight'])
                 else:
                     d[animal] = [rows[0]['weight'],]
             else:
-                r.append(' ')
+                r.append('-')
         t.append(r)
 
-    r = ['mean',]
+    r = ['', 'mean',]
     for animal in animals:
         try:
             r.append('%.1f' % np.mean(d[animal]))
@@ -105,8 +113,12 @@ if __name__ == '__main__':
             r.append(' ')
     t.append(r)
 
-    sys.stdout.write('<H1>Mazer Lab NHP Weights Summary</H1>\n')
-    sys.stdout.write('<H2>\n%s - %s</H2>\n' % \
+    sys.stdout.write('<H1>Mazer Lab</H1>\n')
+    sys.stdout.write('<H2>NHP Weekly Weights</H2>\n')
+    sys.stdout.write('<H3>Week of: \n%s - %s</H2>\n' % \
                      (dates[0], dates[-1]))
-    htmlcode = HTML.table(t, header_row=['date'] + animals)
+    htmlcode = HTML.table(t, header_row=['day', 'date'] + animals)
     sys.stdout.write(htmlcode)
+    sys.stdout.write('<p>\n')
+    sys.stdout.write('() - percent baseline weight\n')
+    
