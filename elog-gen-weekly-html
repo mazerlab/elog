@@ -120,5 +120,6 @@ if __name__ == '__main__':
     htmlcode = HTML.table(t, header_row=['day', 'date'] + animals)
     sys.stdout.write(htmlcode)
     sys.stdout.write('<p>\n')
-    sys.stdout.write('() - percent baseline weight\n')
+    sys.stdout.write('1. () - percent baseline weight<p>\n')
+    sys.stdout.write('2. missing date indicates no measurement<p>\n')
     
