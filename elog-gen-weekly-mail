@@ -1,6 +1,6 @@
 #!/bin/sh
 
-elog-gen-weekly-html > /tmp/mlab$$.html
+/auto/share/pypeextra/elog-gen-weekly-html > /tmp/mlab$$.html
 date | mail -r elog@mlab.yale.edu \
 	-S smtp=mail.yale.edu -s "weekly weights" -a /tmp/mlab$$.html \
 	james.mazer@yale.edu
