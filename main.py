@@ -1189,7 +1189,8 @@ class GuiWindow(Frame):
             self.session.rv.setval('xdtb', round(xdtb,1))
             self.session.rv.setval('dtb', round(dtb,1))
             if kg is None:
-                warn(self, 'DTB Calc: Please enter weight.', timeout=1000)
+                #warn(self, 'DTB Calc: Please enter weight.', timeout=1000)
+                pass
             else:
                 self.session.rv.setval('dtb_ml', round(dtb*kg,1))
                 self.session.rv.setval('xdtb_ml', round(xdtb*kg,1))

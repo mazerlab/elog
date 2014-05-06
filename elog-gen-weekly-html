@@ -65,32 +65,44 @@ if __name__ == '__main__':
         sys.exit(1)
 
     db = DB()
-    if len(sys.argv) > 1:
-        end = "'%s'" % sys.argv[1]
-    else:
-        end = 'NOW()'
 
+    # find monday of this week or week containing specified date
+    if len(sys.argv) > 1:
+        startd = datetime.datetime(1,1,1).strptime(sys.argv[1], '%Y-%m-%d')
+        while startd.weekday() != 0:
+            startd -= datetime.timedelta(1)
+    else:
+        startd = datetime.datetime(1,1,1).today()
+        while startd.weekday() != 0:
+            startd -= datetime.timedelta(1)
+    start = startd.strftime('%Y-%m-%d')
+
+    now = datetime.datetime(1,1,1).now()
+
+    dates = []
+    for n in range(7):
+        dates.append(startd + datetime.timedelta(n))
+            
     (ok, rows) = db.q("""SELECT * """
                       """ FROM session WHERE """
-                      """ DATEDIFF(%s, date) <= 7 AND """
-                      """ DATEDIFF(%s, date) >= 0 AND """
+                      """ DATEDIFF(date, '%s') >= 0 AND """
+                      """ DATEDIFF(date, '%s') < 7  AND """
                       """ restricted > 0"""
-                      """ ORDER BY date""" % (end, end,))
+                      """ ORDER BY date""" % (start, start,))
 
-    dates = list(set([r['date'] for r in rows]))
-    dates.sort()
     animals = list(set([r['animal'] for r in rows]))
     animals.sort()
 
     d = {}
     t = []
     for date in dates:
-        r = ['%s' % DAYS[date.weekday()], '%s' % date,]
+        ds = date.strftime('%Y-%m-%d')
+        r = ['%s' % DAYS[date.weekday()], '%s' % ds,]
         for animal in animals:
             (ok, rows) = db.q("""SELECT weight,thweight """
                               """ FROM session WHERE """
                               """ date='%s' AND """
-                              """ animal LIKE "%s" """ % (date, animal))
+                              """ animal LIKE "%s" """ % (ds, animal))
             if len(rows) > 0 and \
                 isinstance(rows[0]['weight'], types.FloatType):
                 w = rows[0]['weight']
@@ -102,7 +114,11 @@ if __name__ == '__main__':
                 else:
                     d[animal] = [rows[0]['weight'],]
             else:
-                r.append('-')
+                if date > now:
+                    # hasn't happened yet..
+                    r.append(' ')
+                else:
+                    r.append('-')
         t.append(r)
 
     r = ['', 'mean',]
@@ -115,11 +131,11 @@ if __name__ == '__main__':
 
     sys.stdout.write('<H1>Mazer Lab</H1>\n')
     sys.stdout.write('<H2>NHP Weekly Weights</H2>\n')
-    sys.stdout.write('<H3>Week of: \n%s - %s</H2>\n' % \
-                     (dates[0], dates[-1]))
+    sys.stdout.write('<H3>[%s]-[%s]</H2>\n' % \
+                     (dates[0].strftime('%Y-%m-%d'),
+                      dates[-1].strftime('%Y-%m-%d'),))
     htmlcode = HTML.table(t, header_row=['day', 'date'] + animals)
     sys.stdout.write(htmlcode)
     sys.stdout.write('<p>\n')
-    sys.stdout.write('1. () - percent baseline weight<p>\n')
-    sys.stdout.write('2. missing date indicates no measurement<p>\n')
+    sys.stdout.write('() - percent baseline weight<p>\n')
     
