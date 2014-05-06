@@ -23,6 +23,7 @@ function pf = dbfind(pattern, varargin)
 %       'one' -  allow exactly one match
 %       'load' - load files (otherwise, just result names)
 %       'noload' or 'list' - load files (otherwise, just result names)
+%       'crapok' - load crap-flagged files (by default only non-crap files)
 %
 
 %  OUTPUT
@@ -39,12 +40,14 @@ assert(~isempty(pattern), 'pattern required');
 
 multiple_ok = 0;
 loadp2m = 1;
+crapok = 0;
 
 if any(strcmp(varargin, 'load')),       loadp2m=1;      end
 if any(strcmp(varargin, 'noload')),     loadp2m=0;      end
 if any(strcmp(varargin, 'list')),       loadp2m=0;      end
 if any(strcmp(varargin, 'all')),        multiple_ok=1;  end
 if any(strcmp(varargin, 'one')),        multiple_ok=0;  end
+if any(strcmp(varargin, 'crapok')),     crapok=1;       end
 
 if ~exist('multiple_ok', 'var')
   multiple_ok = 0;
@@ -63,9 +66,14 @@ end
 
 %% Query the DB
 pattern = strrep(pattern, '*', '%');
-query = sprintf(['SELECT src FROM dfile WHERE src LIKE "%%%s%%"' ...
+if crapok
+  x = '';
+else
+  x = 'AND NOT crap';
+end
+query = sprintf(['SELECT src FROM dfile WHERE src LIKE "%%%s%%"' x ...
                  ' ORDER BY date, right(src, 3)'], ...
-                pattern);
+                  pattern);
 [src] = mysql(query);
 mysql('close');
 
