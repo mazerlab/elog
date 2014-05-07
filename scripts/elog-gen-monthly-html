@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+# -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
+
+"""
+Get last week of data for specified animal -- for YARC/VCS monitoring
+
+"""
+
+import sys; sys.path.append('/auto/share/lib/elog')
+
+import sys
+import os
+import string
+import MySQLdb
+import types
+import datetime, time
+import HTML
+
+import numpy as np
+
+DAYS = ['Mon', 'Tues', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun']
+
+class DB:
+    host='sql.mlab.yale.edu'
+    user='dbusernopass'
+    passwd=''
+    db='mlabdata'
+    
+    def __init__(self):
+
+        self.connection = MySQLdb.connect(DB.host,
+                                          DB.user,
+                                          DB.passwd,
+                                          DB.db)
+        self.cursor = self.connection.cursor()
+
+    def row2dict(self, descr, row):
+        """
+        Convert a SQL query result-row into a dictionary.
+        """
+        dict = {}
+        for k in range(len(descr)):
+            if row[k] is None:
+                dict[descr[k][0]] = ''
+            else:
+                dict[descr[k][0]] = row[k]
+        return dict
+
+    def q(self, cmd, one=False):
+        try:
+            self.cursor.execute(cmd)
+            descr = self.cursor.description
+            if not one:
+                rows = self.cursor.fetchall()
+                dicts = []
+                for row in rows:
+                    dicts.append(self.row2dict(descr, row))
+                return (1, dicts)
+            else:
+                row = self.cursor.fetchone()
+                return (1, row)
+
+        except MySQLdb.Error, e:
+            (number, msg) = e.args
+            return (None, e)
+
+def iget(rows, name):
+    if isinstance(rows[0][name], types.StringType):
+        return 0
+    else:
+        return rows[0][name]
+
+if __name__ == '__main__':
+    if 0 and len(sys.argv) <= 1:
+        sys.stderr.write('usage: elog-weekly [date]\n')
+        sys.exit(1)
+
+    db = DB()
+    if len(sys.argv) > 1:
+        end = "'%s'" % sys.argv[1]
+    else:
+        end = 'NOW()'
+
+    (ok, rows) = db.q("""SELECT * """
+                      """ FROM session WHERE """
+                      """ DATEDIFF(%s, date) <= 7 AND """
+                      """ DATEDIFF(%s, date) >= 0 AND """
+                      """ restricted > 0"""
+                      """ ORDER BY date""" % (end, end,))
+
+    dates = list(set([r['date'] for r in rows]))
+    dates.sort()
+    animals = list(set([r['animal'] for r in rows]))
+    animals.sort()
+
+    (ok, now) = db.q("""SELECT NOW()""", one=True)
+    now = now[0]
+
+    for animal in animals:
+        t = []
+        for datenum in range(1,32):
+            date = '%04d-%02d-%02d' % (now.year, now.month-1, datenum)
+            tr = [date,]
+            (ok, rows) = db.q("""SELECT * """
+                              """ FROM session WHERE """
+                              """ date='%s' AND """
+                              """ animal LIKE "%s" """ % (date, animal))
+            if len(rows):
+                tr.append('%s' % rows[0]['user'])
+                tr.append('%s' % rows[0]['weight'])
+                if rows[0]['restricted']:
+                    tr.append('y')
+                else:
+                    tr.append(' ')
+                if rows[0]['tested']:
+                    tr.append('y')
+                else:
+                    tr.append(' ')
+                tr.append('y')                #stool
+                tr.append('y')                #urine
+                tr.append('y')                #skin
+                tr.append('-')                #pcv
+                ww = iget(rows,'water_work')
+                ws = iget(rows, 'water_sup')
+                wf = iget(rows, 'fruit_ml')
+                wt = ww + ws + wf
+                tr.append('%s (%s+%s) ml' % (wt, ww, ws+wf))
+                tr.append(rows[0]['fruit'])
+            else:
+                for n in range(10):
+                    tr.append(' ')
+                
+            t.append(tr)
+
+        h = [['Monthly Health and Fluid Record',
+              '%04d-%02d' % (now.year, now.month), 'Mazer', animal],]
+        sys.stdout.write(HTML.table(h))
+        
+        sys.stdout.write('<hr>\n')
+        htmlcode = HTML.table(t, header_row=['date', 'user', 'weight',
+                                             'restricted', 'tested', 
+                                             'stool', 'urine', 'skin', 'pcv',
+                                             'fluid', 'other'],
+                                             col_align=['center']*11,
+                                             style="border: 1px solid #000000; border-collapse: collapse; font-size: .8em;")
+        
+        sys.stdout.write(htmlcode)
+        sys.stdout.write('<p style="page-break-after:always;"> </p>\n')
+    
