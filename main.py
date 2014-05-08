@@ -297,14 +297,17 @@ class RecordView(Frame):
             if not elist_by_col.has_key(col):
                 elist_by_col[col] = []
 
+            fbox = Frame(self.frame1, relief=GROOVE, borderwidth=2)
             if type(validator) == types.TupleType:
                 # this doesn't quite work yet!
-                e = Pmw.ComboBox(self.frame1, labelpos='w',
+                e = Pmw.ComboBox(fbox, labelpos='w',
                                  label_text=fieldname,
                                  dropdown=1)
                 if sz: e.component('entry')['width'] = sz
-                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
+                fbox.grid(row=row, column=col, columnspan=cspan,
+                          sticky=E+W, padx=0, pady=0)
                 e.component('entry')['state'] = state
+                e.pack(expand=1, fill=BOTH);
                 if state == DISABLED:
                     e.component('label')['fg'] = 'blue'
                 else:
@@ -337,15 +340,18 @@ class RecordView(Frame):
                     e.component('label')['fg'] = 'black'
 
             elif validator == BOOL:
-                e = Checkbutton2(self.frame1, text=fieldname, state=state)
-                e.grid(row=row, column=col, columnspan=cspan, sticky=W, padx=3)
-
+                e = Checkbutton2(fbox, text=fieldname, state=state)
+                fbox.grid(row=row, column=col, columnspan=cspan,
+                          sticky=W, padx=0, pady=0)
+                e.pack(expand=1, fill=BOTH);
             else:
-                e = Pmw.EntryField(self.frame1, labelpos='w',
+                e = Pmw.EntryField(fbox, labelpos='w',
                                    label_text=fieldname, validate=validator)
                 if sz: e.component('entry')['width'] = sz
-                e.grid(row=row, column=col, columnspan=cspan, sticky=E+W, padx=3)
+                fbox.grid(row=row, column=col, columnspan=cspan,
+                          sticky=E+W, padx=0, pady=0)
                 e.component('entry')['state'] = state
+                e.pack(expand=1, fill=BOTH);
                 if state == DISABLED:
                     e.component('label')['fg'] = 'blue'
                 else:
@@ -1403,6 +1409,18 @@ def start():
             new = 1
         elif isarg(arg, '-date=') or isarg(arg, '--date='):
             date = string.split(arg, '=')[1]
+            try:
+                # try to use the clever parsedatetime module to handle
+                # stuff like 'yesterday' etc..
+                import parsedatetime as pdt
+                p = pdt.Calendar(pdt.Constants()).parse(date)
+                if p[1] == 0:
+                    sys.stderr.write('bad date:: %s\n' % date)
+                    sys.exit(1)
+                p = p[0]
+                date = '%04d-%02d-%02d' % (p.tm_year,p.tm_mon,p.tm_mday,)
+            except ImportError:
+                pass
         elif isarg(arg, '-date') or isarg(arg, '--date'):
             require_tk(tk)
             date = tkdialogs.getdate(tk)
