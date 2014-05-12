@@ -88,13 +88,17 @@ if __name__ == '__main__':
         now = now[0]
         date0 = now.strftime('%Y-%m-01')
 
-    (ok, rows) = db.q("""SELECT * """
+    # only do this for animals restricted during the specified month
+    (ok, rows) = db.q("""SELECT animal """
                       """ FROM session WHERE """
                       """ DATEDIFF('%s', date) <= 31 AND """
                       """ restricted > 0""" % (date0,))
 
     animals = list(set([r['animal'] for r in rows]))
     animals.sort()
+    if len(animals) == 0:
+        sys.stderr.write('no animals on restriction\n')
+        sys.exit(0)
 
     for animal in animals:
         t = []
@@ -126,10 +130,17 @@ if __name__ == '__main__':
                 wt = ww + ws + wf
                 tr.append('%s (%s+%s+%s)' % (wt, ww, ws, wf))
                 tr.append(rows[0]['fruit'])
+                l = rows[0]['note'].split('\n')[0]
+                if len(l) and l[0] == '!':
+                    # first line of note starts is !, stick it here..
+                    tr.append(l[1:])
+                else:
+                    tr.append('-')
+                    
             else:
-                for n in range(10):
+                for n in range(11):
                     tr.append(' ')
-
+            tr.append(date)
             t.append(tr)
 
         if animal is not animals[0]:
@@ -147,8 +158,9 @@ if __name__ == '__main__':
         htmlcode = HTML.table(t, header_row=['date', 'user', 'weight',
                                              'restricted', 'tested',
                                              'stool', 'urine', 'skin', 'pcv',
-                                             'fluid (wrk+sup+fruit)', 'other'],
-                                             col_align=['center']*11,
+                                             'fluid (wrk+sup+fruit)', 'fruit',
+                                             'other', 'date'],
+                                             col_align=['center']*13,
                                              style=s)
 
         sys.stdout.write(htmlcode)
