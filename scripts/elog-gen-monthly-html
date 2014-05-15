@@ -131,12 +131,13 @@ if __name__ == '__main__':
                 tr.append('%s (%s+%s+%s)' % (wt, ww, ws, wf))
                 tr.append(rows[0]['fruit'])
                 l = rows[0]['note'].split('\n')[0]
-                if len(l) and l[0] == '!':
-                    # first line of note starts is !, stick it here..
+                if len(l) and l[0] in '%#;%/!':
+                    # if first line of note appears to be a "comment", put
+                    # it in the other column..
                     tr.append(l[1:])
                 else:
                     tr.append('-')
-                    
+
             else:
                 for n in range(11):
                     tr.append(' ')
