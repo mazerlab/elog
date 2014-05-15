@@ -35,6 +35,11 @@ SESSION_FIELDS = (
     ("xdtb (ml/kg)", REAL,  float, DISABLED, 5,  (2, 4, 1), None),
     ("xdtb_ml (ml)", REAL,  float, DISABLED, 5,  (3, 4, 1), None),
 
+    ("health_stool>stool",      BOOL, int, NORMAL, 1,      (0, 5, 1), None),
+    ("health_urine>urine",      BOOL, int, NORMAL, 1,      (1, 5, 1), None),
+    ("health_skin>skin",      BOOL, int, NORMAL, 1,      (2, 5, 1), None),
+    ("health_pcv>pcv",      BOOL, int, NORMAL, 1,      (3, 5, 1), None),
+
     ("note",            TEXT, None, NORMAL, (90, 20), (4, 0, 5), None),
     )
 

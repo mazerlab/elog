@@ -288,11 +288,17 @@ class RecordView(Frame):
         elist_by_col = {}
         for fd in fields:
             (fieldname, validator, converter, state, sz, pos, callback) = fd
-            s = fieldname.split()
-            if len(s) > 1:
-                sqlname = s[0]
+
+            if '>' in fieldname:
+                # allow for a different sql name and label: 'sqlfield>..label..'
+                sqlname, fieldname = fieldname.split('>')
             else:
-                sqlname = fieldname
+                s = fieldname.split()
+                if len(s) > 1:
+                    sqlname = s[0]
+                else:
+                    sqlname = fieldname
+
             (row, col, cspan) = pos
             if not elist_by_col.has_key(col):
                 elist_by_col[col] = []

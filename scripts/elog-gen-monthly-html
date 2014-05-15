@@ -74,6 +74,14 @@ def ps(s):
     if len(s): return s
     else: return '-'
 
+def pc(s):                                # checked?
+    if s: return '&#10004;'
+    else: return ' '
+
+def pyn(s):
+    if s: return 'y'
+    else: return 'n'
+        
 if __name__ == '__main__':
     if 0 and len(sys.argv) <= 1:
         sys.stderr.write('usage: elog-gen-monthly-html [YYYY-MM]\n')
@@ -112,18 +120,12 @@ if __name__ == '__main__':
             if len(rows):
                 tr.append(ps('%s' % rows[0]['user']))
                 tr.append(ps('%s' % rows[0]['weight']))
-                if rows[0]['restricted']:
-                    tr.append('y')
-                else:
-                    tr.append(' ')
-                if rows[0]['tested']:
-                    tr.append('y')
-                else:
-                    tr.append(' ')
-                tr.append('y')                #stool
-                tr.append('y')                #urine
-                tr.append('y')                #skin
-                tr.append('-')                #pcv
+                tr.append(pyn(rows[0]['restricted']))
+                tr.append(pyn(rows[0]['tested']))
+                tr.append(pc(rows[0]['health_stool']))
+                tr.append(pc(rows[0]['health_urine']))
+                tr.append(pc(rows[0]['health_skin']))
+                tr.append(pc(rows[0]['health_pcv']))
                 ww = iget(rows,'water_work')
                 ws = iget(rows, 'water_sup')
                 wf = iget(rows, 'fruit_ml')
