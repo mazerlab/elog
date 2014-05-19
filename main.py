@@ -1416,17 +1416,24 @@ def start():
         elif isarg(arg, '-date=') or isarg(arg, '--date='):
             date = string.split(arg, '=')[1]
             try:
-                # try to use the clever parsedatetime module to handle
-                # stuff like 'yesterday' etc..
-                import parsedatetime as pdt
-                p = pdt.Calendar(pdt.Constants()).parse(date)
-                if p[1] == 0:
-                    sys.stderr.write('bad date:: %s\n' % date)
-                    sys.exit(1)
-                p = p[0]
-                date = '%04d-%02d-%02d' % (p.tm_year,p.tm_mon,p.tm_mday,)
-            except ImportError:
-                pass
+                # -1 for yesterday, etc..
+                date = datetime.datetime.now() + \
+                  datetime.timedelta(days=int(date))
+                date = date.strftime('%Y-%m-%d')
+            except ValueError:
+                try:
+                    # try to use the clever parsedatetime module to handle
+                    # stuff like 'yesterday' etc..
+                    import parsedatetime as pdt
+                    p = pdt.Calendar(pdt.Constants()).parse(date)
+                    if p[1] != 1:
+                        # assume it's a YYYY-MM-DD string..
+                        date = date
+                    else:
+                        date = '%04d-%02d-%02d' % \
+                          (p[0].tm_year,p[0].tm_mon,p[0].tm_mday,)
+                except ImportError:
+                    pass
         elif isarg(arg, '-date') or isarg(arg, '--date'):
             require_tk(tk)
             date = tkdialogs.getdate(tk)
