@@ -288,7 +288,7 @@ class RecordView(Frame):
         elist_by_col = {}
         for fd in fields:
             (fieldname, validator, converter, state, sz, pos, callback) = fd
-
+            
             if '>' in fieldname:
                 # allow for a different sql name and label: 'sqlfield>..label..'
                 sqlname, fieldname = fieldname.split('>')
@@ -299,72 +299,77 @@ class RecordView(Frame):
                 else:
                     sqlname = fieldname
 
-            (row, col, cspan) = pos
-            if not elist_by_col.has_key(col):
-                elist_by_col[col] = []
-
-            fbox = Frame(self.frame1, relief=GROOVE, borderwidth=2)
-            if type(validator) == types.TupleType:
-                # this doesn't quite work yet!
-                e = Pmw.ComboBox(fbox, labelpos='w',
-                                 label_text=fieldname,
-                                 dropdown=1)
-                if sz: e.component('entry')['width'] = sz
-                fbox.grid(row=row, column=col, columnspan=cspan,
-                          sticky=E+W, padx=0, pady=0)
+            if sz is None:
+                # create widget, but don't show it..
+                e = Pmw.EntryField(self.frame1, labelpos='w',
+                                   label_text=fieldname)
                 e.component('entry')['state'] = state
-                e.pack(expand=1, fill=BOTH);
-                if state == DISABLED:
-                    e.component('label')['fg'] = 'blue'
-                else:
-                    e.component('label')['fg'] = 'black'
-            elif validator == TEXT:
-                (w, h) = sz
-                e = Pmw.ScrolledText(self.frame2,
-                                     borderframe=1,
-                                     text_height=h, text_width=w,
-                                     labelpos='w', label_text=fieldname)
-                e.pack(expand=1, fill=BOTH)
-                e.component('text').bind('<Alt-t>', ins_time)
-                if allowattach:
-                    e.component('text').bind('<Alt-a>', \
-                                             lambda e, s=self: \
-                                             ins_attachment(e, s))
-                e.component('text').configure(wrap=WORD)
-                if not GuiWindow.showlinks.get():
-                    e.component('text').tag_config('experlink', elide=1)
-                    e.component('text').tag_config('attachlink', elide=1)
-                else:
-                    e.component('text').tag_config('experlink', \
-                                                   foreground='red')
-                    e.component('text').tag_config('attachlink', \
-                                                   foreground='red')
-                e.component('text')['state'] = state
-                if state == DISABLED:
-                    e.component('label')['fg'] = 'blue'
-                else:
-                    e.component('label')['fg'] = 'black'
-
-            elif validator == BOOL:
-                e = Checkbutton2(fbox, text=fieldname, state=state)
-                fbox.grid(row=row, column=col, columnspan=cspan,
-                          sticky=W, padx=0, pady=0)
-                e.pack(expand=1, fill=BOTH);
             else:
-                e = Pmw.EntryField(fbox, labelpos='w',
-                                   label_text=fieldname, validate=validator)
-                if sz: e.component('entry')['width'] = sz
-                fbox.grid(row=row, column=col, columnspan=cspan,
-                          sticky=E+W, padx=0, pady=0)
-                e.component('entry')['state'] = state
-                e.pack(expand=1, fill=BOTH);
-                if state == DISABLED:
-                    e.component('label')['fg'] = 'blue'
-                else:
-                    e.component('label')['fg'] = 'black'
+                (row, col, cspan) = pos
+                if not elist_by_col.has_key(col):
+                    elist_by_col[col] = []
 
-            elist.append(e)
-            elist_by_col[col].append(e)
+                fbox = Frame(self.frame1, relief=GROOVE, borderwidth=2)
+                if type(validator) == types.TupleType:
+                    # this doesn't quite work yet!
+                    e = Pmw.ComboBox(fbox, labelpos='w',
+                                     label_text=fieldname,
+                                     dropdown=1)
+                    if sz: e.component('entry')['width'] = sz
+                    fbox.grid(row=row, column=col, columnspan=cspan,
+                              sticky=E+W, padx=0, pady=0)
+                    e.component('entry')['state'] = state
+                    e.pack(expand=1, fill=BOTH);
+                    if state == DISABLED:
+                        e.component('label')['fg'] = 'blue'
+                    else:
+                        e.component('label')['fg'] = 'black'
+                elif validator == TEXT:
+                    (w, h) = sz
+                    e = Pmw.ScrolledText(self.frame2,
+                                         borderframe=1,
+                                         text_height=h, text_width=w,
+                                         labelpos='w', label_text=fieldname)
+                    e.pack(expand=1, fill=BOTH)
+                    e.component('text').bind('<Alt-t>', ins_time)
+                    if allowattach:
+                        e.component('text').bind('<Alt-a>', \
+                                                 lambda e, s=self: \
+                                                 ins_attachment(e, s))
+                    e.component('text').configure(wrap=WORD)
+                    if not GuiWindow.showlinks.get():
+                        e.component('text').tag_config('experlink', elide=1)
+                        e.component('text').tag_config('attachlink', elide=1)
+                    else:
+                        e.component('text').tag_config('experlink', \
+                                                       foreground='red')
+                        e.component('text').tag_config('attachlink', \
+                                                       foreground='red')
+                    e.component('text')['state'] = state
+                    if state == DISABLED:
+                        e.component('label')['fg'] = 'blue'
+                    else:
+                        e.component('label')['fg'] = 'black'
+                elif validator == BOOL:
+                    e = Checkbutton2(fbox, text=fieldname, state=state)
+                    fbox.grid(row=row, column=col, columnspan=cspan,
+                              sticky=W, padx=0, pady=0)
+                    e.pack(expand=1, fill=BOTH);
+                else:
+                    e = Pmw.EntryField(fbox, labelpos='w',
+                                       label_text=fieldname, validate=validator)
+                    if sz: e.component('entry')['width'] = sz
+                    fbox.grid(row=row, column=col, columnspan=cspan,
+                              sticky=E+W, padx=0, pady=0)
+                    e.component('entry')['state'] = state
+                    e.pack(expand=1, fill=BOTH);
+                    if state == DISABLED:
+                        e.component('label')['fg'] = 'blue'
+                    else:
+                        e.component('label')['fg'] = 'black'
+
+                elist.append(e)
+                elist_by_col[col].append(e)
 
             self._entries[sqlname] = e
             self._validators[sqlname] = validator
@@ -470,6 +475,23 @@ class RecordView(Frame):
         """
         if db.readonly:
             return
+
+        # for session records only, check to make sure nobody's been
+        # messing with the record while you have it open..
+        if (table is 'session') and (not key[0] is None):
+            rows = db.query("""SELECT lastmod FROM session"""
+                            """ WHERE sessionID=%d""" % key[1])
+            last = rows[0]['lastmod']
+            if last != self.getval('lastmod'):
+                i = warn(self,
+                 "\nSession modified while open, overwrite changes?\n",
+                 ("Ok", "Cancel"))
+                if i != 'Ok':
+                    return
+            else:
+                # update lastmod with current time in 1/10 secs as the
+                # new change time
+                self.setval('lastmod', int(10.0*time.time()))
 
         (keyfield, keyvalue) = key
 

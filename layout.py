@@ -10,6 +10,9 @@ from tools import *
 
 SESSION_FIELDS = (
     # sessionID
+
+    ("lastmod",         None, None, DISABLED, None, None, None),
+    
     ("animal",          None, None, DISABLED, 10,  (0, 0, 1), None),
     ("date",            None, sdate, DISABLED, 12, (1, 0, 1), None),
     ("user",            None, None, NORMAL, 10,    (2, 0, 1), None),
