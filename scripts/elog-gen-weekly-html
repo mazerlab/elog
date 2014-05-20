@@ -11,60 +11,23 @@ import sys; sys.path.append('/auto/share/lib/elog')
 import sys
 import os
 import string
-import MySQLdb
 import types
 import datetime, time
+
+# from elog
 import HTML
+import elogdb
 
 import numpy as np
 
 DAYS = ['Mon', 'Tues', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun']
-
-class DB:
-    host='sql.mlab.yale.edu'
-    user='dbusernopass'
-    passwd=''
-    db='mlabdata'
-    
-    def __init__(self):
-
-        self.connection = MySQLdb.connect(DB.host,
-                                          DB.user,
-                                          DB.passwd,
-                                          DB.db)
-        self.cursor = self.connection.cursor()
-
-    def row2dict(self, descr, row):
-        """
-        Convert a SQL query result-row into a dictionary.
-        """
-        dict = {}
-        for k in range(len(descr)):
-            if row[k] is None:
-                dict[descr[k][0]] = ''
-            else:
-                dict[descr[k][0]] = row[k]
-        return dict
-
-    def q(self, cmd):
-        try:
-            self.cursor.execute(cmd)
-            descr = self.cursor.description
-            rows = self.cursor.fetchall()
-            dicts = []
-            for row in rows:
-                dicts.append(self.row2dict(descr, row))
-            return (1, dicts)
-        except MySQLdb.Error, e:
-            (number, msg) = e.args
-            return (None, e)
 
 if __name__ == '__main__':
     if 0 and len(sys.argv) <= 1:
         sys.stderr.write('usage: elog-weekly [date]\n')
         sys.exit(1)
 
-    db = DB()
+    db = elogdb.DB()
 
     # find monday of this week or week containing specified date
     if len(sys.argv) > 1:
