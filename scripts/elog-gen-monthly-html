@@ -17,6 +17,7 @@ import datetime, time
 # from elog
 import HTML
 import elogdb
+from keyboard import keyboard
 
 import numpy as np
 
@@ -27,14 +28,20 @@ def iget(rows, name):
         return rows[0][name]
 
 def ps(s):
+    """return string or '-'
+    """
     if len(s): return s
     else: return '-'
 
 def pc(s):                                # checked?
+    """return checkmark or blank
+    """
     if s: return '&#10004;'
     else: return ' '
 
 def pyn(s):
+    """return 'y' or 'n' based on boolean value
+    """
     if s: return 'y'
     else: return 'n'
         
@@ -64,11 +71,18 @@ if __name__ == '__main__':
         sys.stderr.write('no animals on restriction\n')
         sys.exit(0)
 
+    DAYS = ('Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su')
     for animal in animals:
         t = []
         for datenum in range(1,32):
-            date = '%s-%02d' % (date0[:-2], datenum)
-            tr = [date,]
+            date = '%s%02d' % (date0[:-2], datenum)
+            dow = time.strptime(date, '%Y-%m-%d').tm_wday
+            x = '%s %s' % (DAYS[dow], date)
+            if dow in (5,6):
+                datestr = """<font color='blue'>%s</font>""" % x
+            else:
+                datestr = x
+            tr = [datestr,]
             (ok, rows) = db.q("""SELECT * """
                               """ FROM session WHERE """
                               """ date='%s' AND """
@@ -94,7 +108,7 @@ if __name__ == '__main__':
                     # it in the other column..
                     tr.append(l[1:])
                 else:
-                    tr.append('-')
+                    tr.append(' ')
 
             else:
                 for n in range(11):
@@ -114,14 +128,21 @@ if __name__ == '__main__':
         s = """border: 1px solid #000000; border-collapse: collapse; """ \
           """ font-size: .8em;"""
 
-        htmlcode = HTML.table(t, header_row=['date', 'user', 'weight',
+        ca = col_align=['center']*13
+        ca[9] = 'left'
+        ca[10] = 'left'
+        ca[11] = 'left'
+
+        htmlcode = HTML.table(t, header_row=['date', 'user', 'kg',
                                              'restricted', 'tested',
                                              'stool', 'urine', 'skin', 'pcv',
-                                             'fluid (wrk+sup+fruit)', 'fruit',
+                                             'fluid (w+s+f)', 'fruit',
                                              'other', 'date'],
-                                             col_align=['center']*13,
+                                             col_align=ca,
                                              style=s)
-
+        sys.stdout.write('<pre>')
         sys.stdout.write(htmlcode)
+        sys.stdout.write('</pre>')
+
         sys.stdout.write('<p style="page-break-after:always;"> </p>\n')
 
