@@ -58,12 +58,13 @@ if __name__ == '__main__':
         (ok, now) = db.q("""SELECT NOW()""", one=True)
         now = now[0]
         date0 = now.strftime('%Y-%m-01')
-
+        
     # only do this for animals restricted during the specified month
     (ok, rows) = db.q("""SELECT animal """
                       """ FROM session WHERE """
-                      """ DATEDIFF('%s', date) <= 31 AND """
-                      """ restricted > 0""" % (date0,))
+                      """ MONTH('%s') = MONTH(date) AND """
+                      """ YEAR('%s') = YEAR(date) AND """
+                      """ restricted > 0""" % (date0, date0,))
 
     animals = list(set([r['animal'] for r in rows]))
     animals.sort()
@@ -71,12 +72,20 @@ if __name__ == '__main__':
         sys.stderr.write('no animals on restriction\n')
         sys.exit(0)
 
+    sys.stdout.write("""<style type="text/css" media="print">\n"""
+                     """ @page { size: portrait;\n"""
+                     """         margin-left: 0.5in; }\n"""
+                     """</style>""")
+        
     DAYS = ('Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su')
     for animal in animals:
         t = []
         for datenum in range(1,32):
             date = '%s%02d' % (date0[:-2], datenum)
-            dow = time.strptime(date, '%Y-%m-%d').tm_wday
+            try:
+                dow = time.strptime(date, '%Y-%m-%d').tm_wday
+            except ValueError:
+                break
             x = '%s %s' % (DAYS[dow], date)
             if dow in (5,6):
                 datestr = """<font color='blue'>%s</font>""" % x
@@ -113,20 +122,20 @@ if __name__ == '__main__':
             else:
                 for n in range(11):
                     tr.append(' ')
-            tr.append(date)
             t.append(tr)
 
         if animal is not animals[0]:
             sys.stdout.write('<hr>\n')
+            sys.stdout.write('<p style="page-break-after:always;"></p>')
 
-        h = [['Monthly Health and Fluid Record',
-              '%s' % (date0[:-3]), 'PI:Mazer', 'NHP:%s' % (animal,)],]
+        h = [['Mazer Lab Monthly Records',
+              '%s' % (date0[:-3]), 'PI:Mazer', '%s' % (animal,)],]
         sys.stdout.write(HTML.table(h))
 
         sys.stdout.write('<p>\n')
 
         s = """border: 1px solid #000000; border-collapse: collapse; """ \
-          """ font-size: .8em;"""
+          """ font-size: .7em;"""
 
         ca = col_align=['center']*13
         ca[9] = 'left'
@@ -134,15 +143,14 @@ if __name__ == '__main__':
         ca[11] = 'left'
 
         htmlcode = HTML.table(t, header_row=['date', 'user', 'kg',
-                                             'restricted', 'tested',
-                                             'stool', 'urine', 'skin', 'pcv',
+                                             'rest', 'test',
+                                             'stl', 'uri', 'skn', 'pcv',
                                              'fluid (w+s+f)', 'fruit',
-                                             'other', 'date'],
+                                             'other'],
                                              col_align=ca,
                                              style=s)
-        sys.stdout.write('<pre>')
+        sys.stdout.write('<pre>\n')
         sys.stdout.write(htmlcode)
-        sys.stdout.write('</pre>')
-
-        sys.stdout.write('<p style="page-break-after:always;"> </p>\n')
+        sys.stdout.write('</pre>\n')
+        #sys.stdout.write('<p style="page-break-after:always;"> </p>\n')
 

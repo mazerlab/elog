@@ -12,9 +12,9 @@ test-inplace:
 	@chmod +x ./elogatt
 
 install:
-	sudo make install_
+	sudo make install_ install_scripts
 
-install_:
+install_: 
 	rm -rf /auto/share/lib/elog
 	mkdir /auto/share/lib/elog
 	cp $(MODULES) /auto/share/lib/elog
@@ -27,6 +27,10 @@ install_:
 	chmod +x /auto/share/pypeextra/dbfind
 	chmod +x /auto/share/pypeextra/qhistory
 	chmod +x /auto/share/pypeextra/eloghist
+	cp scripts/* /auto/share/pypeextra
+
+
+install_scripts:
 	chmod +x scripts/*
 	cp scripts/* /auto/share/pypeextra
 
