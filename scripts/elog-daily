@@ -1,5 +1,5 @@
 #!/bin/sh
 
-/auto/share/pypeextra/elog-gen-monthly-html > /auto/www/elogs/monthly.html
+/auto/share/pypeextra/elog-gen-monthly-html $1 > /auto/www/elogs/monthly.html
 cp /auto/www/elogs/monthly.html /auto/www/elogs/$(date +%Y-%m).html
 
