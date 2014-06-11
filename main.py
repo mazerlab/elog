@@ -288,7 +288,7 @@ class RecordView(Frame):
         elist_by_col = {}
         for fd in fields:
             (fieldname, validator, converter, state, sz, pos, callback) = fd
-            
+
             if '>' in fieldname:
                 # allow for a different sql name and label: 'sqlfield>..label..'
                 sqlname, fieldname = fieldname.split('>')
@@ -1217,11 +1217,14 @@ class GuiWindow(Frame):
                                  """ BY date DESC LIMIT 7""" % \
                                  (self.animal, date,))
             wt = np.array([r['weight'] for r in rows])
-            dt = np.array([r['water_work'] for r in rows]) / wt
-            xdtb = np.mean(dt) - 2.0 * np.std(dt)
-            dtb = max(MINDTB, xdtb)
-            self.session.rv.setval('xdtb', round(xdtb,1))
-            self.session.rv.setval('dtb', round(dtb,1))
+            try:
+                dt = np.array([r['water_work'] for r in rows]) / wt
+                xdtb = np.mean(dt) - 2.0 * np.std(dt)
+                dtb = max(MINDTB, xdtb)
+                self.session.rv.setval('xdtb', round(xdtb,1))
+                self.session.rv.setval('dtb', round(dtb,1))
+            except:
+                warn(self, 'DTB Calc: error occurred, check', timeout=1000)
             if kg is None:
                 #warn(self, 'DTB Calc: Please enter weight.', timeout=1000)
                 pass
