@@ -30,8 +30,8 @@ SESSION_FIELDS = (
 
     ("fruit",           None, None, NORMAL, 10,    (0, 3, 1), None),
     ("fruit_ml",        INTEGER, int, NORMAL, 5,   (1, 3, 1), None),
-    ("totalfluid (ml)", REAL, float, DISABLED, 5,  (2, 3, 1), None),
-    ("food",            INTEGER, int, NORMAL, 5,   (3, 3, 1), None),
+    ("food",            INTEGER, int, NORMAL, 5,   (2, 3, 1), None),
+    ("totalfluid (ml)", REAL, float, DISABLED, 5,  (3, 3, 1), None),
     
     ("weight (kg)",     REAL, float, NORMAL, 5,    (0, 4, 1), None),
     ("thweight (kg)",   REAL, float, NORMAL, 5,    (1, 4, 1), None),

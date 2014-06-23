@@ -1218,16 +1218,24 @@ class GuiWindow(Frame):
                                  (self.animal, date,))
             wt = np.array([r['weight'] for r in rows])
             try:
+                # dtb is (mean-2sigma) working intake ml/kg for last 7 days
+                # note: this value can drop below zero, so it's forced >=0
+                #
+                # dtb is water dose is ml/kg
+                # dtb_ml is volume (based on dtb and animal weight)
+                # dtb/dtb_ml are clip to a minimum of 10 ml/kg
+                # xdtb/xdtb_ml are clipped to a 0 ml/kg
                 dt = np.array([r['water_work'] for r in rows]) / wt
-                xdtb = np.mean(dt) - 2.0 * np.std(dt)
+                xdtb = max(0, np.mean(dt) - 2.0 * np.std(dt))
                 dtb = max(MINDTB, xdtb)
                 self.session.rv.setval('xdtb', round(xdtb,1))
                 self.session.rv.setval('dtb', round(dtb,1))
             except:
                 warn(self, 'DTB Calc: error occurred, check', timeout=1000)
+                
             if kg is None:
-                #warn(self, 'DTB Calc: Please enter weight.', timeout=1000)
-                pass
+                self.session.rv.setval('dtb_ml', 0.0)
+                self.session.rv.setval('xdtb_ml', 0.0)
             else:
                 self.session.rv.setval('dtb_ml', round(dtb*kg,1))
                 self.session.rv.setval('xdtb_ml', round(xdtb*kg,1))
