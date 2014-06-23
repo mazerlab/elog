@@ -30,13 +30,13 @@ SESSION_FIELDS = (
 
     ("fruit",           None, None, NORMAL, 10,    (0, 3, 1), None),
     ("fruit_ml",        INTEGER, int, NORMAL, 5,   (1, 3, 1), None),
-    ("food",            INTEGER, int, NORMAL, 5,   (2, 3, 1), None),
-    ("totalfluid (ml)", REAL, float, DISABLED, 5,  (3, 3, 1), None),
+    ("xdtb (ml/kg)", REAL,  float, DISABLED, 5,  (2, 3, 1), None),
+    ("xdtb_ml (ml)", REAL,  float, DISABLED, 5,  (3, 3, 1), None),
     
     ("weight (kg)",     REAL, float, NORMAL, 5,    (0, 4, 1), None),
     ("thweight (kg)",   REAL, float, NORMAL, 5,    (1, 4, 1), None),
-    ("xdtb (ml/kg)", REAL,  float, DISABLED, 5,  (2, 4, 1), None),
-    ("xdtb_ml (ml)", REAL,  float, DISABLED, 5,  (3, 4, 1), None),
+    ("food",            INTEGER, int, NORMAL, 5,   (2, 4, 1), None),
+    ("totalfluid (ml)", REAL, float, DISABLED, 5,  (3, 4, 1), None),
 
     ("health_stool>stool",      BOOL, int, NORMAL, 1,      (0, 5, 1), None),
     ("health_urine>urine",      BOOL, int, NORMAL, 1,      (1, 5, 1), None),
