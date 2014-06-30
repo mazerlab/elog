@@ -2,7 +2,11 @@
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
 """
-Get last week of data for specified animal -- for YARC/VCS monitoring
+Generate HTML summary of the weeks data -- default is
+this week, otherwise, the week containing the date
+specified on the command line. All animals on included
+that were on restriction during the specified time
+period.  For VCS/YARC "monitoring".
 
 """
 
