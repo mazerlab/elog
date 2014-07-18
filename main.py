@@ -1422,6 +1422,8 @@ def start():
             init = 1
         elif isarg(arg, '-y'):
             force_yes = 1
+        elif isarg(arg, '-rev') or isarg(arg, '--rev'):
+            rev = 1
         elif isarg(arg, '-r') or isarg(arg, '--readonly'):
             readonly = 1
         elif isarg(arg, '-info') or isarg(arg, '--info'):
@@ -1486,8 +1488,6 @@ def start():
             count = 0
         elif isarg(arg, '-out=') or isarg(arg, '--out='):
             outdir = string.split(arg, '=')[1]
-        elif isarg(arg, '-rev') or isarg(arg, '--rev'):
-            rev = 1
         elif isarg(arg, '-data') or isarg(arg, '--data'):
             dfile = 1
             force = None

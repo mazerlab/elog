@@ -11,6 +11,8 @@ import posixpath
 
 from tools import *
 
+from keyboard import keyboard
+
 LINEWIDTH=70
 
 class FormatError:
@@ -340,6 +342,108 @@ def dump(outdir, db, animal, count, rev=None, date=None):
     if len(rows) == 0:
         sys.stderr.write("No matches for: animal='%s'\n" % animal)
         return
+    
+    if count > 0:
+        rows = rows[:count]
+    elif count < 0:
+        rows = rows[count:]
+
+
+    if not posixpath.exists(outdir):
+        os.mkdir(outdir)
+    elif not posixpath.isdir(outdir):
+        sys.stderr.write("Error creating %s\n" % outdir)
+        return
+
+    months = unique(map(lambda r: (r['date'].year, r['date'].month), rows))
+    months.sort()
+    
+    if rev:
+        rows.reverse()
+        months.reverse()
+
+    # highlight filenames and output
+    p = re.compile("([a-z]*[0-9][0-9][0-9][0-9]\\.[a-z]*\\.[0-9][0-9][0-9])")
+    
+    indexf = open(outdir+'/index.html', 'w')
+
+    indexf.write("""elog toc -- %s\n<hr>\n""" % (animal,))
+    
+    for (year, month) in months:
+        outfile = outdir + '/%4d-%02d.html' % (year, month)
+
+        outbuf = ""
+        n = 0
+        for session in rows:
+            if session['date'].month != month or session['date'].year != year:
+                continue
+            try:
+                txt = emit_session(outdir, db, session)
+                txt = nlsqueeze(txt)
+                txt = p.sub("<b>\g<1></b>\n", txt);
+
+                outbuf += """<DIV CLASS="navbar"; style="width:100%; background:lightblue">\n"""
+                outbuf += """<A NAME="sess%d">\n""" % n
+                outbuf += """<A CLASS="button" HREF="#sess%d">[first]</A> """ % (0,)
+                outbuf += """<A CLASS="button" HREF="#sess%d">[prev session]</A> """ % (max(0,n-1),)
+                outbuf += """<A CLASS="button" HREF="#sess%d">[next session]</A>\n""" % (min(len(rows)-1,n+1),)
+                outbuf += """<A CLASS="button" HREF="#sess%d">[last]</A> """ % (len(rows)-1,)
+                outbuf += """</DIV>\n"""
+                outbuf += txt
+                n = n + 1
+            except IOError:
+                sys.stderr.write("fatal error -- aborting\n")
+                sys.exit(1)
+
+        if len(outbuf) > 0:
+            out = open(outfile, 'w')
+            out.write("""<style type="text/css">\n"""
+                      """  .button { margin-left:5; margin-right:5}\n"""
+                      """  .tab_session { width:100%;\n"""
+                      """                 margin-top:5;margin-bottom:5;\n"""
+                      """                 background:#f0f0f0; border:0px solid black}\n"""
+                      """  .tab_sessioninfo { background: #f0f0f0; }\n"""
+                      """  .tab_exper { background: #e0e0e0; border:0px solid blue}\n"""
+                      """  .tab_experinfo { background: #e0e0e0; }\n"""
+                      """  .tab_unit { background: #d0d0d0; }\n"""
+                      """  .tab_dfile { background: #c0c0c0; }\n"""
+                      """  .tab_att { background: #c0c0c0; border:1px solid black}\n"""
+                      """  .attachimg { max-width: 600px; }\n"""
+                      """  table { border:0px solid black; }\n"""
+                      """  body { font-family: monospace; }\n"""
+                      """  @media print { .navbar { display:none; }\n"""
+                      """                  .attachimg { max-height: 2.5in; } }\n"""
+                      """</style>\n""")
+
+            errs = FormatError().get()
+            if len(errs):
+                s = string.join(errs, '\n')
+                s = string.replace(s, '>', '&gt')
+                s = string.replace(s, '<', '&lt')
+                out.write("<h2>%d Dump Error(s)</h2>\n" % (len(errs),))
+                out.write("<PRE>\n%s\n</PRE><hr>\n" % s)
+
+            out.write(outbuf)
+            out.close()
+            indexf.write('<A HREF="./%04d-%02d.html">%04d-%02d</A> -- %d sessions<br>\n' % \
+                         (year, month, year, month, n))
+        
+    indexf.close()
+    return 1
+
+def old_dump(outdir, db, animal, count, rev=None, date=None):
+    if date is None:
+        date = ''
+    else:
+        date = "AND date LIKE '%s'" % date
+
+    rows = db.query("""\
+    SELECT * FROM session WHERE animal LIKE '%s' %s ORDER BY date""" \
+                          % (animal, date,))
+
+    if len(rows) == 0:
+        sys.stderr.write("No matches for: animal='%s'\n" % animal)
+        return
 
     if count > 0:
         rows = rows[:count]
@@ -356,6 +460,8 @@ def dump(outdir, db, animal, count, rev=None, date=None):
         return
 
     out = open(outdir+'/index.html', 'w')
+
+    keyboard()
 
     out.write("""<style type="text/css">\n"""
               """  .button { margin-left:5; margin-right:5}\n"""
