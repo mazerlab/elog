@@ -320,7 +320,7 @@ def find_pype():
     """Find pype installation and pype library dir to python search path.
     """
     dir = os.popen('pype --dir', 'r').readline()[:-1]
-    sys.path = sys.path + [dir+'/lib']
+    sys.path = sys.path + [dir+'/pype']
 
 def insert_dfile(db, fname, force=None):
     """Try to insert record for existing datafile into the database.
@@ -331,7 +331,7 @@ def insert_dfile(db, fname, force=None):
     # and animal names ... this should really be in the database
     # somewhere..
     animals = {
-        'pid': 'picard',
+        'pic': 'picard',
         'merc': 'mercutio',
         }
 
@@ -388,7 +388,7 @@ def insert_dfile(db, fname, force=None):
                      user, crap, preferred,)) is None:
             sys.stderr.write("db replace error: %s\n" % (fname,))
     else:
-        sys.stderr.write("skipped duplicate: %s\n" % fname)
+        sys.stderr.write("skipped dup: %s\n" % fname)
         return 1
 
     rows = db.query("""SELECT experID FROM exper"""
