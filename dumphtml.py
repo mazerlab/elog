@@ -10,6 +10,7 @@ import os
 import posixpath
 
 from tools import *
+import HTML
 
 from keyboard import keyboard
 
@@ -105,6 +106,7 @@ def emit_session(outdir, db, r):
         """</table>\n""" % r
 
     # expand 'exper' hyperlinks iteratively until there are no more..
+    
     while 1:
         links = re.findall('<elog:exper=.*>', s)
         if len(links) == 0: break
@@ -264,8 +266,11 @@ def emit_attachment(outdir, db, id, tag):
     row = rows[0]
 
     img = row['data'].decode('base64')
+    attachdir = outdir + '/attached'
+    if not posixpath.exists(attachdir):
+        os.mkdir(attachdir)
     fname = 'a%05d.jpg' % int(id)
-    open(outdir + '/' + fname , 'w').write(img)
+    open(attachdir + '/' + fname , 'w').write(img)
 
     if len(row['title']) == 0:
         row['title'] = 'no title'
@@ -281,7 +286,7 @@ def emit_attachment(outdir, db, id, tag):
         s = s + tag + """%(note)s\n""" % row
         s = s + """ </td></tr>\n"""
     s = s + """ <tr><td>\n"""
-    s = s + """  <img class="attachimg" src="%s">\n""" % fname
+    s = s + """  <img class="attachimg" src="attached/%s">\n""" % fname
     s = s + """ </td></tr>\n"""
     s = s + """</table>\n"""
 
@@ -365,10 +370,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
     # highlight filenames and output
     p = re.compile("([a-z]*[0-9][0-9][0-9][0-9]\\.[a-z]*\\.[0-9][0-9][0-9])")
     
-    indexf = open(outdir+'/index.html', 'w')
-
-    indexf.write("""elog toc -- %s\n<hr>\n""" % (animal,))
-    
+    toc = []
     for (year, month) in months:
         outfile = outdir + '/%4d-%02d.html' % (year, month)
 
@@ -384,10 +386,11 @@ def dump(outdir, db, animal, count, rev=None, date=None):
 
                 outbuf += """<DIV CLASS="navbar"; style="width:100%; background:lightblue">\n"""
                 outbuf += """<A NAME="sess%d">\n""" % n
-                outbuf += """<A CLASS="button" HREF="#sess%d">[first]</A> """ % (0,)
-                outbuf += """<A CLASS="button" HREF="#sess%d">[prev session]</A> """ % (max(0,n-1),)
-                outbuf += """<A CLASS="button" HREF="#sess%d">[next session]</A>\n""" % (min(len(rows)-1,n+1),)
-                outbuf += """<A CLASS="button" HREF="#sess%d">[last]</A> """ % (len(rows)-1,)
+                outbuf += """<A CLASS="button" HREF="#top">[top]</A> """
+                outbuf += """<A CLASS="button" HREF="#sess%d">[prev]</A> """ % (max(0,n-1),)
+                outbuf += """<A CLASS="button" HREF="index.html">[toc]</A> """
+                outbuf += """<A CLASS="button" HREF="#sess%d">[next]</A>\n""" % (min(len(rows)-1,n+1),)
+                outbuf += """<A CLASS="button" HREF="#bottom">[bottom]</A> """
                 outbuf += """</DIV>\n"""
                 outbuf += txt
                 n = n + 1
@@ -423,12 +426,29 @@ def dump(outdir, db, animal, count, rev=None, date=None):
                 out.write("<h2>%d Dump Error(s)</h2>\n" % (len(errs),))
                 out.write("<PRE>\n%s\n</PRE><hr>\n" % s)
 
+            out.write("""<A NAME="top">\n""")
             out.write(outbuf)
+            out.write("""<A NAME="bottom">\n""")
             out.close()
-            indexf.write('<A HREF="./%04d-%02d.html">%04d-%02d</A> -- %d sessions<br>\n' % \
-                         (year, month, year, month, n))
-        
-    indexf.close()
+
+            elist = db.query("""
+            SELECT exper FROM exper WHERE
+            date >= '%04d-%02d-01' AND date <= '%04d-%02d-31' AND
+            animal='%s' AND exper NOT LIKE '%%0000' ORDER BY exper
+            """ % (year, month, year, month, animal,))
+            if len(elist):
+                rng = '%s..%s' % (elist[0]['exper'], elist[-1]['exper'])
+            else:
+                rng = 'no phys'
+            toc.append(['<A HREF="./%04d-%02d.html">%04d-%02d</A>'% (year, month, year, month),
+                            '%d' % n, '%d' % len(elist), '%.1f' % (len(elist)/float(n)), rng]);
+            
+    tocf = open(outdir+'/index.html', 'w')
+    tocf.write("""%s elog index.\n<hr>\n""" % (animal,))
+    tocf.write(HTML.table(toc,
+                          col_align=['center', 'center', 'center', 'center', 'left'],
+                          header_row=['month', '#sessions', '#exper', 'expers', 'exper/sess']));
+    tocf.close()
     return 1
 
 def old_dump(outdir, db, animal, count, rev=None, date=None):

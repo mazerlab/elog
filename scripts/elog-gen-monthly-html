@@ -137,7 +137,7 @@ if __name__ == '__main__':
         s = """border: 1px solid #000000; border-collapse: collapse; """ \
           """ font-size: .7em;"""
 
-        ca = col_align=['center']*13
+        ca = ['center']*13
         ca[9] = 'left'
         ca[10] = 'left'
         ca[11] = 'left'
