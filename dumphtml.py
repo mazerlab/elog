@@ -439,7 +439,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
             if len(elist):
                 rng = '%s..%s' % (elist[0]['exper'], elist[-1]['exper'])
             else:
-                rng = 'no phys'
+                rng = ''
             toc.append(['<A HREF="./%04d-%02d.html">%04d-%02d</A>'% (year, month, year, month),
                             '%d' % n, '%d' % len(elist), '%.1f' % (len(elist)/float(n)), rng]);
             
@@ -447,7 +447,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
     tocf.write("""%s elog index.\n<hr>\n""" % (animal,))
     tocf.write(HTML.table(toc,
                           col_align=['center', 'center', 'center', 'center', 'left'],
-                          header_row=['month', '#sessions', '#exper', 'expers', 'exper/sess']));
+                          header_row=['month', '#sess', '#exper', '~exper/sess', 'expers']));
     tocf.close()
     return 1
 
