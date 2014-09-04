@@ -1110,7 +1110,7 @@ class GuiWindow(Frame):
         GuiWindow.showdel.set(0)
 
         GuiWindow.showdatafiles = IntVar()
-        GuiWindow.showdatafiles.set(1)
+        GuiWindow.showdatafiles.set(0)
 
         menu.addmenuitem('Edit', 'checkbutton', label='show data files',
                          variable=GuiWindow.showdatafiles,
@@ -1234,7 +1234,7 @@ class GuiWindow(Frame):
                 warn(self, 'DTB Calc: error occurred, check', timeout=1000)
                 dtb = -1.0
                 xdtb = -1.0
-                
+
             if kg is None:
                 self.session.rv.setval('dtb_ml', 0.0)
                 self.session.rv.setval('xdtb_ml', 0.0)
