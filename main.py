@@ -817,19 +817,20 @@ class ExperWindow(Frame):
 
         d = self.rv.getall()
 
-        if GuiWindow.showdatafiles.get():
-            # get list of datafiles
-            rows = self.db.query("""SELECT src FROM dfile"""
-                                 """ WHERE exper='%s' AND date='%s'"""
-                                 """ ORDER BY dfileID""" % (exper, date,))
-            nr = 3
-            self.dfiles = []
-            for row in rows:
-                w = DatafileFrame(self, self.db, row['src'], \
-                                  borderwidth=2, relief=RIDGE)
+        # get list of datafiles
+        rows = self.db.query("""SELECT src FROM dfile"""
+                             """ WHERE exper='%s' AND date='%s'"""
+                             """ ORDER BY dfileID""" % (exper, date,))
+        nr = 3
+        self.dfiles = []
+        for row in rows:
+            w = DatafileFrame(self, self.db, row['src'], \
+                              borderwidth=2, relief=RIDGE)
+            if GuiWindow.showdatafiles.get():
+                # only display if the not hidden:
                 w.grid(row=nr, column=0, sticky=E+W)
-                self.dfiles.append(w)
-                nr = nr + 1
+            self.dfiles.append(w)
+            nr = nr + 1
 
     def save(self):
         """
