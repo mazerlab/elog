@@ -2,7 +2,12 @@
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
 """
-Get last week of data for specified animal -- for YARC/VCS monitoring
+
+Generate dump of this (or specified) month's data for summary sheets
+that go in the monkey room for VCS/YARC recoding keeping (replacing
+manually filled in sheets). This is the spreadsheet-like summary worksheet
+that indicates weights, monitoring and fluid intake for each monkey that
+is active during the indicated month.
 
 """
 

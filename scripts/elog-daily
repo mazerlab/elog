@@ -1,10 +1,20 @@
 #!/bin/sh
 
-if [ "$1" = "" ]; then
+#
+# This script should be run daily (even though it runs the "monthly
+# worksheet generator). The worksheet covers the current (or specified)
+# month, but should be updated every day.
+# 
+
+if [ "$1" = "-help" ]; then
+  echo 'usage: elog-daily [YYYY-MM]'
+  exit 1
+elif [ "$1" = "" ]; then
   d=$(date +%Y-%m)
 else
   d=$1
 fi
+
 /auto/share/pypeextra/elog-gen-monthly-html $d > /auto/www/elogs/$d.html
 if [ "$1" = "" ]; then
   cp /auto/www/elogs/$d.html /auto/www/elogs/monthly.html

@@ -1,4 +1,16 @@
 #!/bin/sh
+#
+# run this at the end of each sheet to email a weekly summary
+# of active monkey weights for the past week -- this needs to
+# be forwarded to VCS to comply with the "enhanced monitoring"
+# for animals that can get less than their DTB.
+#
+
+if [ "$1" = "-help" ]; then
+  echo 'usage: elog-weekly [YYYY-MM-DD] ; n.b. data should be a monday'
+  exit 1
+fi
+
 
 /auto/share/pypeextra/elog-gen-weekly-html $1 > /tmp/mlab$$.html
 date | mail -r elog@mlab.yale.edu \
