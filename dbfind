@@ -52,8 +52,11 @@ else:
 result = {}
 if len(sys.argv) > 1:
     target = '%' + string.join(sys.argv[1:],'%') + '%'
+    # convert to regexp:
+    target = target.replace('%', '.*')
     db = DB()
-    (ok, rows) = db.q('SELECT src FROM dfile WHERE src LIKE "%s"'
+    # use REGEXP instead of LIKE
+    (ok, rows) = db.q('SELECT src FROM dfile WHERE src REGEXP "%s"'
                       ' ORDER BY date, right(src, 3)' % target)
     dlist = {}
     for r in rows:
