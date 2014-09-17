@@ -360,7 +360,12 @@ def dump(outdir, db, animal, count, rev=None, date=None):
         sys.stderr.write("Error creating %s\n" % outdir)
         return
 
-    months = unique(map(lambda r: (r['date'].year, r['date'].month), rows))
+    try:
+        months = unique(map(lambda r: (r['date'].year, r['date'].month), rows))
+    except:
+        sys.stderr.write("Error: records without proper dates!\n")
+        return
+
     months.sort()
     
     if rev:
