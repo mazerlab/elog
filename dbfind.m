@@ -1,33 +1,24 @@
 function pf = dbfind(pattern, varargin)
 %function pf = dbfind(pattern, ...opts...)
 %
-% Find datafiles using sql-db -- load if unique, otherwise show
+% Query elog database to find cells based on src filename:
+%     >> pf = dbfind('pic0254.gratrev.%', 'merge')
 %
-% Example:
+%INPUT
+%  pattern - filename pattern
+%     pattern can contain wildcards -- either % to matech
+%     anything or a standard regular expression (e.g., .* to
+%     matches anything, [0-5] to match numbers 0-5 etc).
 %
-%     >> dbfind pic0254
-%     ans = 
-%         '/auto/data/critters/picard/2009/2009-06-24/pic0254.flash.000'
-%         '/auto/data/critters/picard/2009/2009-06-24/pic0254.flash.001'
-%         ...
-%         '/auto/data/critters/picard/2009/2009-06-24/pic0254.spotmap.003'
-%     >> dbfind pic0254.gratrev
-%     ans =
-%     /auto/data/critters/picard/2009/2009-06-24/pic0254.gratrev.004
-%     >>
+%  opts -
+%     'one'    - require exactly one matching file (default)
+%     'merge'  - allow multiple matches and merge into single pf
+%     'all'    - allow multiple matches, return as list of pfs
+%     'list'   - return list file names instead of loading them
+%     'crapok' - load crap files (by default is to skip these)
 %
-%  INPUT
-%    pattern - filename pattern
-%    opts -
-%       'all' - allow multiple matches
-%       'one' -  allow exactly one match
-%       'load' - load files (otherwise, just result names)
-%       'noload' or 'list' - load files (otherwise, just result names)
-%       'crapok' - load crap-flagged files (by default only non-crap files)
-%
-
-%  OUTPUT
-%    pf - pypefile datastruct (from p2mLoad2)
+%OUTPUT
+%    pf - pypefile datastruct (from p2mLoad2 or p2mMerge)
 
 %% Parameters
 DBHOST = 'sql.mlab.yale.edu';
@@ -41,13 +32,13 @@ assert(~isempty(pattern), 'pattern required');
 multiple_ok = 0;
 loadp2m = 1;
 crapok = 0;
+merge = 0;
 
-if any(strcmp(varargin, 'load')),       loadp2m=1;      end
-if any(strcmp(varargin, 'noload')),     loadp2m=0;      end
 if any(strcmp(varargin, 'list')),       loadp2m=0;      end
 if any(strcmp(varargin, 'all')),        multiple_ok=1;  end
 if any(strcmp(varargin, 'one')),        multiple_ok=0;  end
 if any(strcmp(varargin, 'crapok')),     crapok=1;       end
+if any(strcmp(varargin, 'merge')),      multiple_ok=1;merge=1;       end
 
 if ~exist('multiple_ok', 'var')
   multiple_ok = 0;
@@ -65,15 +56,24 @@ if(~status)
 end
 
 %% Query the DB
-pattern = strrep(pattern, '*', '%');
+
 if crapok
   x = '';
 else
   x = 'AND NOT crap';
 end
-query = sprintf(['SELECT src FROM dfile WHERE src LIKE "%%%s%%"' x ...
+
+if sum(pattern == '%')
+  compfn = 'LIKE';
+  pattern = ['%' pattern];
+else
+  compfn = 'REGEXP';
+  pattern = ['.*' pattern];
+end
+query = sprintf(['SELECT src FROM dfile WHERE src %s "%s" %s' ...
                  ' ORDER BY date, right(src, 3)'], ...
-                  pattern);
+                  compfn, pattern, x);
+query
 [src] = mysql(query);
 mysql('close');
 
@@ -108,6 +108,9 @@ else
     else
       fprintf('warning: %s missing\n', src{n});
     end
+  end
+  if merge
+    pf = p2mMerge(pf);
   end
 end
 
