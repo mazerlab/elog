@@ -13,8 +13,9 @@ function pf = dbfind(pattern, varargin)
 %  opts -
 %     'one'     - require exactly one matching file (default)
 %     'merge'   - allow multiple matches and merge into single pf
-%     'all'     - allow multiple matches, return as list of pfs
+%     'all'     - allow multiple matches, returns a list of pfs/names
 %     'list'    - return list file names instead of loading them
+%     'noload'  - same as list..
 %     'crapok'  - load crap files (by default is to skip these)
 %     'trainok' - allow training files (0000; default is to skip them)
 %
@@ -37,6 +38,7 @@ trainok = 0;
 merge = 0;
 
 if any(strcmp(varargin, 'list')),       loadp2m=0;                      end
+if any(strcmp(varargin, 'noload')),     loadp2m=0;                      end
 if any(strcmp(varargin, 'all')),        multiple_ok=1;                  end
 if any(strcmp(varargin, 'one')),        multiple_ok=0;                  end
 if any(strcmp(varargin, 'crapok')),     crapok=1;                       end
