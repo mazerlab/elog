@@ -11,11 +11,12 @@ function pf = dbfind(pattern, varargin)
 %     matches anything, [0-5] to match numbers 0-5 etc).
 %
 %  opts -
-%     'one'    - require exactly one matching file (default)
-%     'merge'  - allow multiple matches and merge into single pf
-%     'all'    - allow multiple matches, return as list of pfs
-%     'list'   - return list file names instead of loading them
-%     'crapok' - load crap files (by default is to skip these)
+%     'one'     - require exactly one matching file (default)
+%     'merge'   - allow multiple matches and merge into single pf
+%     'all'     - allow multiple matches, return as list of pfs
+%     'list'    - return list file names instead of loading them
+%     'crapok'  - load crap files (by default is to skip these)
+%     'trainok' - allow training files (0000; default is to skip them)
 %
 %OUTPUT
 %    pf - pypefile datastruct (from p2mLoad2 or p2mMerge)
@@ -32,13 +33,15 @@ assert(~isempty(pattern), 'pattern required');
 multiple_ok = 0;
 loadp2m = 1;
 crapok = 0;
+trainok = 0;
 merge = 0;
 
-if any(strcmp(varargin, 'list')),       loadp2m=0;      end
-if any(strcmp(varargin, 'all')),        multiple_ok=1;  end
-if any(strcmp(varargin, 'one')),        multiple_ok=0;  end
-if any(strcmp(varargin, 'crapok')),     crapok=1;       end
-if any(strcmp(varargin, 'merge')),      multiple_ok=1;merge=1;       end
+if any(strcmp(varargin, 'list')),       loadp2m=0;                      end
+if any(strcmp(varargin, 'all')),        multiple_ok=1;                  end
+if any(strcmp(varargin, 'one')),        multiple_ok=0;                  end
+if any(strcmp(varargin, 'crapok')),     crapok=1;                       end
+if any(strcmp(varargin, 'merge')),      multiple_ok=1;merge=1;          end
+if any(strcmp(varargin, 'trainok')),    trainok=1;                      end
 
 if ~exist('multiple_ok', 'var')
   multiple_ok = 0;
@@ -58,9 +61,13 @@ end
 %% Query the DB
 
 if crapok
-  x = '';
+  mod = '';
 else
-  x = 'AND NOT crap';
+  mod = 'AND NOT crap';
+end
+
+if ~trainok
+  mod = [mod ' AND not src LIKE "%0000.%" '];
 end
 
 if sum(pattern == '%')
@@ -72,7 +79,7 @@ else
 end
 query = sprintf(['SELECT src FROM dfile WHERE src %s "%s" %s' ...
                  ' ORDER BY date, right(src, 3)'], ...
-                  compfn, pattern, x);
+                  compfn, pattern, mod);
 [src] = mysql(query);
 mysql('close');
 
