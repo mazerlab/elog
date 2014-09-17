@@ -73,7 +73,6 @@ end
 query = sprintf(['SELECT src FROM dfile WHERE src %s "%s" %s' ...
                  ' ORDER BY date, right(src, 3)'], ...
                   compfn, pattern, x);
-query
 [src] = mysql(query);
 mysql('close');
 
