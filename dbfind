@@ -3,45 +3,9 @@
 
 import sys, os
 import string
-import MySQLdb
 
-def row2dict(descr, row):
-    """
-    Convert a SQL query result-row into a dictionary.
-    """
-    dict = {}
-    for k in range(len(descr)):
-        if row[k] is None:
-            dict[descr[k][0]] = ''
-        else:
-            dict[descr[k][0]] = row[k]
-    return dict
-
-class DB:
-    host='sql.mlab.yale.edu'
-    user='dbusernopass'
-    passwd=''
-    db='mlabdata'
-    def __init__(self):
-
-        self.connection = MySQLdb.connect(DB.host,
-                                          DB.user,
-                                          DB.passwd,
-                                          DB.db)
-        self.cursor = self.connection.cursor()
-
-    def q(self, cmd):
-        try:
-            self.cursor.execute(cmd)
-            descr = self.cursor.description
-            rows = self.cursor.fetchall()
-            dicts = []
-            for row in rows:
-                dicts.append(row2dict(descr, row))
-            return (1, dicts)
-        except MySQLdb.Error, e:
-            (number, msg) = e.args
-            return (None, e)
+sys.path.append('/auto/share/lib');
+from elog.elogdb import DB
 
 if len(sys.argv) > 1 and (sys.argv[1] == '-d' or sys.argv[1] == '-dir'):
     dir = 1
@@ -57,6 +21,7 @@ if len(sys.argv) > 1:
     db = DB()
     # use REGEXP instead of LIKE
     (ok, rows) = db.q('SELECT src FROM dfile WHERE src REGEXP "%s"'
+                      ' AND NOT crap '
                       ' ORDER BY date, right(src, 3)' % target)
     dlist = {}
     for r in rows:
