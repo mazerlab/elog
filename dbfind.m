@@ -22,6 +22,13 @@ function pf = dbfind(pattern, varargin)
 %OUTPUT
 %    pf - pypefile datastruct (from p2mLoad2 or p2mMerge)
 
+persistent LASTPF
+
+if ~exist('pattern', 'var')
+  pf = LASTPF;
+  return;
+end
+
 %% Parameters
 DBHOST = 'sql.mlab.yale.edu';
 DBUSER = 'dbusernopass';
@@ -123,5 +130,4 @@ else
 end
 
 
-
-
+LASTPF = pf;
