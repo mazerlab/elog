@@ -31,7 +31,10 @@ if len(sys.argv) > 1:
                 print os.path.dirname(r['src'])
                 dlist[d] = 1
         else:
-            print r['src']
+            if os.path.exists(r['src']):
+                print r['src']
+            else:
+                print r['src'], '[MISSING -- but not crap]'
 
 else:
     sys.stderr.write('usage: dbfind [-d] partial file/exper name\n')
