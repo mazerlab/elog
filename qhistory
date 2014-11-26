@@ -57,7 +57,7 @@ class DB:
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        sys.stderr.write('usage: qweights animal [lastn]\n')
+        sys.stderr.write('usage: qhistory animal [lastn]\n')
         sys.exit(1)
 
     animal = sys.argv[1]
