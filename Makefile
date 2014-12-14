@@ -1,4 +1,8 @@
-#PYPEDIR=$(shell pypenv --dir)
+ifeq ($(shell domainname), mlab)
+  INSTALLROOT ?= /auto/share
+else
+  INSTALLROOT ?= /usr/local
+endif
 
 MODULES=*.py
 
@@ -15,24 +19,25 @@ install:
 	sudo make install_ install_scripts
 
 install_: 
-	rm -rf /auto/share/lib/elog
-	mkdir /auto/share/lib/elog
-	cp $(MODULES) /auto/share/lib/elog
-	sed s^%%LIB%%^/auto/share/lib^g \
-		<elog.template >/auto/share/bin/elog 
-	sed s^%%LIB%%^/auto/share/lib^g \
-		<elogatt.template >/auto/share/bin/elogatt
-	chmod +x /auto/share/bin/elogatt
-	cp dbfind dbfind.m elogatt.m qhistory eloghist /auto/share/pypeextra/
-	chmod +x /auto/share/pypeextra/dbfind
-	chmod +x /auto/share/pypeextra/qhistory
-	chmod +x /auto/share/pypeextra/eloghist
-	cp scripts/* /auto/share/pypeextra
+	rm -rf $(INSTALLROOT)/lib/elog
+	mkdir $(INSTALLROOT)/lib/elog
+	cp $(MODULES) $(INSTALLROOT)/lib/elog
+	sed s^%%LIB%%^$(INSTALLROOT)/lib^g \
+		<elog.template >$(INSTALLROOT)/bin/elog 
+	chmod a+x $(INSTALLROOT)/bin/elog
+	sed s^%%LIB%%^$(INSTALLROOT)/lib^g \
+		<elogatt.template >$(INSTALLROOT)/bin/elogatt
+	chmod a+x $(INSTALLROOT)/bin/elogatt
+	cp dbfind dbfind.m elogatt.m qhistory eloghist $(INSTALLROOT)/pypeextra/
+	chmod a+x $(INSTALLROOT)/pypeextra/dbfind
+	chmod a+x $(INSTALLROOT)/pypeextra/qhistory
+	chmod a+x $(INSTALLROOT)/pypeextra/eloghist
+	cp scripts/* $(INSTALLROOT)/pypeextra
 
 
 install_scripts:
 	chmod +x scripts/*
-	cp scripts/* /auto/share/pypeextra
+	cp scripts/* $(INSTALLROOT)/pypeextra
 
 # dump live database for testing using 'test-elog'
 testdata:
@@ -40,7 +45,6 @@ testdata:
 			--add-drop-database --databases mlabdata | \
 		sed s/mlabdata/mlabdata_test/g | gzip >testdata.sql.gz
 	./test-elog -r
-
 
 
 clean:
