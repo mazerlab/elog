@@ -6,6 +6,7 @@ endif
 
 MODULES=*.py
 
+
 test-inplace:
 	@sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elog.template >./elog
@@ -15,10 +16,7 @@ test-inplace:
 	@chmod +x ./elog
 	@chmod +x ./elogatt
 
-install:
-	sudo make install_ install_scripts
-
-install_: 
+install: 
 	rm -rf $(INSTALLROOT)/lib/elog
 	mkdir $(INSTALLROOT)/lib/elog
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
@@ -32,10 +30,6 @@ install_:
 	chmod a+x $(INSTALLROOT)/pypeextra/dbfind
 	chmod a+x $(INSTALLROOT)/pypeextra/qhistory
 	chmod a+x $(INSTALLROOT)/pypeextra/eloghist
-	cp scripts/* $(INSTALLROOT)/pypeextra
-
-
-install_scripts:
 	chmod +x scripts/*
 	cp scripts/* $(INSTALLROOT)/pypeextra
 
@@ -46,13 +40,12 @@ testdata:
 		sed s/mlabdata/mlabdata_test/g | gzip >testdata.sql.gz
 	./test-elog -r
 
-
 clean:
 	/bin/rm -rf *.pyc \#*~ elog elogatt
-	svn status
 
 commit:
 	svn commit && svn update
 
+# output of `make schema` can be used to initialize a new database
 schema:
 	mysqldump -d -hsql -umlab -pmlab mlabdata
