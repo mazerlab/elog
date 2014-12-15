@@ -14,8 +14,6 @@ period.  For VCS/YARC "enhanced monitoring".
 import sys, os
 sys.path.append('%s/lib/elog' % os.path.dirname(os.path.dirname(sys.argv[0])))
 
-import sys
-import os
 import string
 import types
 import datetime, time
