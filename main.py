@@ -57,7 +57,7 @@ def ins_attachment(event, w):
     txt.mark_unset('tmp')
 
     b = Button(txt)
-    b.im = pil_getattach(w.db, id, (40,40))
+    b.im = pil_getattach(w.db, id, (256,256))
     b.config(image=b.im,
              command=lambda m=w,db=w.db,id=id: \
              AttachmentViewer(m,db,id))
@@ -425,7 +425,7 @@ class RecordView(Frame):
                         end = end+'+1c'
                         txt.tag_add('attachlink', begin, end)
                         id = int(txt.get(begin, end)[1:-1].split('=')[1])
-                        im = pil_getattach(self.db, id, (40,40))
+                        im = pil_getattach(self.db, id, (256,256))
                         if im is None:
                             # attachement delted -- go ahead and delete link
                             txt.delete(begin,end)
@@ -445,7 +445,8 @@ class RecordView(Frame):
         """
         for name in dict.keys():
             if self._entries.has_key(name):
-                self._entries[name].setvalue("%s" % dict[name])
+                #self._entries[name].setvalue("%s" % dict[name])
+                self.setval(name, dict[name])
 
     def getval(self, name):
         """Get current on-screen value of indicated field.
@@ -549,11 +550,11 @@ class DatafileFrame(Frame):
         f = Frame(self)
         f.pack(expand=1, fill=X)
 
-        self.rv = RecordView(self, layout.DFILE_FIELDS, db, False)
+        self.rv = RecordView(self, layout.DFILE_FIELDS, db, True)
         self.rv.pack(expand=1, fill=BOTH)
         self.rv.setall(rows[0])
         self.dfileID = rows[0]['dfileID']
-
+        
         b = Button(f, text=os.path.basename(src), \
                    command=lambda w=master,l=link: clipcopy(w,l))
         createToolTip(b, 'copy elog link')
@@ -574,7 +575,6 @@ class DatafileFrame(Frame):
                        command=self.open_attachments)
             createToolTip(b, 'open all attachments')
             b.pack(side=LEFT)
-
 
      def save(self):
          self.rv.save(self.db, table='dfile',
@@ -631,7 +631,7 @@ class UnitWindow:
         b.pack(side=TOP, anchor=W)
         createToolTip(b, 'delete unit from database forever!')
 
-        self.rv = RecordView(page, layout.UNIT_FIELDS, db, False)
+        self.rv = RecordView(page, layout.UNIT_FIELDS, db, True)
         self.rv.pack(side=TOP, expand=1, fill=BOTH)
 
         d = self.exper.rv.getall()
@@ -743,7 +743,7 @@ class ExperWindow(Frame):
         createToolTip(b, 'create new unit (TTL etc)')
         b.pack(side=LEFT)
 
-        self.rv = RecordView(self, layout.EXPER_FIELDS, db, False)
+        self.rv = RecordView(self, layout.EXPER_FIELDS, db, True)
         self.rv.grid(row=1, column=0, sticky=E+W)
 
         self.unitbook = None
