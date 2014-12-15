@@ -214,6 +214,36 @@ class Database(object):
                              (number, msg, cmd))
             return None
 
+    def q(self, cmd, one=False):
+        def row2dict(descr, row):
+            """
+            Convert a SQL query result-row into a dictionary.
+            """
+            dict = {}
+            for k in range(len(descr)):
+                if row[k] is None:
+                    dict[descr[k][0]] = ''
+                else:
+                    dict[descr[k][0]] = row[k]
+            return dict
+        
+        try:
+            self.cursor.execute(cmd)
+            descr = self.cursor.description
+            if not one:
+                rows = self.cursor.fetchall()
+                dicts = []
+                for row in rows:
+                    dicts.append(row2dict(descr, row))
+                return (1, dicts)
+            else:
+                row = self.cursor.fetchone()
+                return (1, row)
+        except MySQLdb.Error, e:
+            (number, msg) = e.args
+            return (None, e)
+                
+
 def popup(w):
     w.winfo_toplevel().deiconify()
     w.winfo_toplevel().lift()

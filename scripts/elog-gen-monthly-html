@@ -20,9 +20,7 @@ import types
 import datetime, time
 
 # from elog
-import HTML
-import elogdb
-from keyboard import keyboard
+import HTML, elogapi
 
 import numpy as np
 
@@ -55,7 +53,7 @@ if __name__ == '__main__':
         sys.stderr.write('usage: elog-gen-monthly-html [YYYY-MM]\n')
         sys.exit(1)
 
-    db = elogdb.DB()
+    db = elogapi.getdb()
 
     if len(sys.argv) > 1:
         date0 = '%s-01' % (sys.argv[1],)

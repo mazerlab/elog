@@ -20,8 +20,7 @@ import types
 import datetime, time
 
 # from elog
-import HTML
-import elogdb
+import HTML, elogapi
 
 import numpy as np
 
@@ -32,7 +31,7 @@ if __name__ == '__main__':
         sys.stderr.write('usage: elog-weekly [date]\n')
         sys.exit(1)
 
-    db = elogdb.DB()
+    db = elogapi.getdb()
 
     # find monday of this week or week containing specified date
     if len(sys.argv) > 1:
