@@ -15,6 +15,7 @@ test-inplace:
 	@chmod +x ./dbfind
 	@chmod +x ./elog
 	@chmod +x ./elogatt
+	./elog -ro
 
 install: 
 	rm -rf $(INSTALLROOT)/lib/elog
@@ -42,9 +43,6 @@ testdata:
 
 clean:
 	/bin/rm -rf *.pyc \#*~ elog elogatt
-
-commit:
-	svn commit && svn update
 
 # output of `make schema` can be used to initialize a new database
 schema:

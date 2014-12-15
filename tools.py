@@ -124,13 +124,6 @@ def _env(var, default=None):
 
 class Database(object):
     # Singleton object -- only one of these really exists!
-    # default params (env vars override these!)
-    _HOST   = 'sql.mlab.yale.edu'
-    _PORT   = '3306'
-    _DB = 'mlabdata'
-    _USER   = 'mlab'
-    _PASSWD = 'mlab'
-
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -142,18 +135,20 @@ class Database(object):
         return cls._instance
 
     def __init__(self, host=None, port=None, db=None, user=None, passwd=None):
+        import dbsettings
+        
         if not Database._init: return
 
         if host is None:
-            self.host = _env('ELOG_HOST', Database._HOST)
+            self.host = _env('ELOG_HOST', dbsettings.HOST)
         if port is None:
-            self.port = int(_env('ELOG_PORT', Database._PORT))
+            self.port = int(_env('ELOG_PORT', dbsettings.PORT))
         if db is None:
-            self.db = _env('ELOG_DB', Database._DB)
+            self.db = _env('ELOG_DB', dbsettings.DB)
         if user is None:
-            self.user = _env('ELOG_USER', Database._USER)
+            self.user = _env('ELOG_USER', dbsettings.USER)
         if passwd is None:
-            self.passwd = _env('ELOG_PASSWD', Database._PASSWD)
+            self.passwd = _env('ELOG_PASSWD', dbsettings.PASSWD)
 
         self.connect()
 
@@ -215,6 +210,11 @@ class Database(object):
             return None
 
     def q(self, cmd, one=False):
+        """simple database query -- returns results as dictionary
+
+        one: if true, select only first row of results..
+        
+        """
         def row2dict(descr, row):
             """
             Convert a SQL query result-row into a dictionary.
