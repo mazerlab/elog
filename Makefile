@@ -15,7 +15,6 @@ test-inplace:
 	@chmod +x ./dbfind
 	@chmod +x ./elog
 	@chmod +x ./elogatt
-	./elog -ro
 
 install: 
 	rm -rf $(INSTALLROOT)/lib/elog
