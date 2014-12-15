@@ -81,10 +81,10 @@ end
 
 if sum(pattern == '%')
   compfn = 'LIKE';
-  pattern = ['%' pattern];
+  pattern = ['%' pattern '%'];
 else
   compfn = 'REGEXP';
-  pattern = ['.*' pattern];
+  pattern = ['.*' pattern '.*'];
 end
 query = sprintf(['SELECT src FROM dfile WHERE src %s "%s" %s' ...
                  ' ORDER BY date, right(src, 3)'], ...
