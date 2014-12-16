@@ -57,7 +57,9 @@ def ins_attachment(event, w):
     b.config(image=b.im,
              command=lambda m=w,db=w.db,id=id: \
              AttachmentViewer(m,db,id))
+    createToolTip(b, 'attachment #%d' % id)
     txt.window_create(INSERT, window=b, padx=10)
+    
 
 def attach(tk, db, im=None, title='no title', note='',
            srctable=None, srcID=None):
@@ -194,21 +196,9 @@ class AttachmentViewer(Toplevel):
         self.db.query("""DELETE FROM attachment WHERE attachmentID=%d""" %
                       (self.id,))
 
+        # note: notes that actually refer to the attachement will be
+        # deleted the next time they are displayed..
         
-        # find dfile's that link to it and delete links
-        rows = self.db.query("""SELECT dfileID,attachlist FROM dfile"""
-                             """ WHERE attachlist LIKE '%%%d,%%'""" %
-                             (self.id,))
-        for row in rows:
-            try:
-                al = row['attachlist'].split(',')
-                al.remove(str(self.id))
-                al = string.join(al, ',')
-                self.db.query("""UPDATE dfile SET attachlist='%s'"""
-                              """ WHERE dfileID=%d""" % (al, row['dfileID']))
-            except ValueError:
-                pass
-
         self.destroy()
 
     def save(self):
@@ -432,6 +422,7 @@ class RecordView(Frame):
                             b.config(image=b.im,
                                      command=lambda m=self,db=self.db,id=id: \
                                      AttachmentViewer(m,db,id))
+                            createToolTip(b, 'attachment #%d' % id)
                             txt.window_create(end, window=b, padx=10)
                         begin = end
 
@@ -562,59 +553,9 @@ class DatafileFrame(Frame):
         createToolTip(b, "copy ''%s''" % src)
         b.pack(side=LEFT)
 
-        b = Button(f, text='attach',
-                   command=lambda s=self,t=tag:s.add_attachment(t))
-        createToolTip(b, 'screen grab window as attachment')
-        b.pack(side=LEFT)
-
-        if len(self.find_attachments()) > 0:
-            b = Button(f, text='open attachments', \
-                       command=self.open_attachments)
-            createToolTip(b, 'open all attachments')
-            b.pack(side=LEFT)
-
      def save(self):
          self.rv.save(self.db, table='dfile',
                       key=('dfileID', self.dfileID))
-
-     def add_attachment(self, tag):
-         attid = attach(self, self.db, im=None, title=tag,
-                        srctable='dfile', srcID=self.dfileID)
-
-         rows = self.db.query("""SELECT attachlist FROM dfile"""
-                              """ WHERE dfileID=%d""" %
-                              (self.dfileID,))
-         new = rows[0]['attachlist'] + '%d,' % attid
-         self.db.query("""UPDATE dfile SET attachlist='%s'"""
-                       """ WHERE dfileID=%d""" %
-                       (new, self.dfileID))
-
-     def find_attachments(self):
-         rows = self.db.query("""SELECT attachlist FROM dfile"""
-                              """ WHERE dfileID=%d""" %
-                              (self.dfileID,))
-         alist = []
-         for a in rows[0]['attachlist'].split(','):
-             if len(a): alist.append(a)
-         return alist
-
-
-     def open_attachments(self):
-         alist = [int(x) for x in self.find_attachments()]
-         if len(alist) > 0:
-             for aid in alist:
-                 if AttachmentViewer.attachmentList.has_key(aid):
-                     # window already open, recycle it
-                     try:
-                         AttachmentViewer.attachmentList[aid].lift()
-                     except:
-                         # rare error, when opening before delete finishes..
-                         del AttachmentViewer.attachmentList[aid]
-                         AttachmentViewer(self, self.db, aid)
-                 else:
-                     AttachmentViewer(self, self.db, aid)
-         else:
-             warn(self, 'No attachments', ("Ok",))
 
 class UnitWindow:
     def __init__(self, db, exper, unit):
