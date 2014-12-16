@@ -77,7 +77,7 @@ def find_dfiles(db, animal, date, exper=None):
         flist[os.path.basename(row['src'])] = row['src']
     return flist
 
-def cachestate(animal=None, date=None):
+def old_cachestate(animal=None, date=None):
     if animal or date:
         f = open(os.getenv('HOME')+'/.elogrc', 'w')
         f.write('%s\n' % animal)

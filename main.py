@@ -24,10 +24,6 @@ import re
 import numpy as np
 
 from keyboard import keyboard
-try:
-    import parsedatetime as pdt
-except:
-    pdt = None
 
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
@@ -77,7 +73,7 @@ def attach(tk, db, im=None, title='no title', note='',
                 """ VALUES ('%s','%s','%s','%s','%s','%s',%d,'%s')""" % \
                 ('jpeg', getuser(), today(), title, note,
                  srctable, srcID, im,)) is None:
-        sys.stderr.write("db insert attachment error\n")
+        sys.stderr.write("elog: db insert attachment error\n")
         return
     rows = db.query("""SELECT attachmentID FROM attachment"""
                     """ ORDER BY attachmentID DESC LIMIT 1""")
@@ -198,7 +194,8 @@ class AttachmentViewer(Toplevel):
         self.db.query("""DELETE FROM attachment WHERE attachmentID=%d""" %
                       (self.id,))
 
-        # file dfile's that link to it and delete links
+        
+        # find dfile's that link to it and delete links
         rows = self.db.query("""SELECT dfileID,attachlist FROM dfile"""
                              """ WHERE attachlist LIKE '%%%d,%%'""" %
                              (self.id,))
@@ -319,7 +316,7 @@ class RecordView(Frame):
                     fbox.grid(row=row, column=col, columnspan=cspan,
                               sticky=E+W, padx=0, pady=0)
                     e.component('entry')['state'] = state
-                    e.pack(expand=1, fill=BOTH);
+                    e.pack(expand=1, fill=BOTH)
                     if state == DISABLED:
                         e.component('label')['fg'] = 'blue'
                     else:
@@ -354,7 +351,7 @@ class RecordView(Frame):
                     e = Checkbutton2(fbox, text=fieldname, state=state)
                     fbox.grid(row=row, column=col, columnspan=cspan,
                               sticky=W, padx=0, pady=0)
-                    e.pack(expand=1, fill=BOTH);
+                    e.pack(expand=1, fill=BOTH)
                 else:
                     e = Pmw.EntryField(fbox, labelpos='w',
                                        label_text=fieldname, validate=validator)
@@ -362,7 +359,7 @@ class RecordView(Frame):
                     fbox.grid(row=row, column=col, columnspan=cspan,
                               sticky=E+W, padx=0, pady=0)
                     e.component('entry')['state'] = state
-                    e.pack(expand=1, fill=BOTH);
+                    e.pack(expand=1, fill=BOTH)
                     if state == DISABLED:
                         e.component('label')['fg'] = 'blue'
                     else:
@@ -427,7 +424,7 @@ class RecordView(Frame):
                         id = int(txt.get(begin, end)[1:-1].split('=')[1])
                         im = pil_getattach(self.db, id, (256,256))
                         if im is None:
-                            # attachement delted -- go ahead and delete link
+                            # attachement deleted -- go ahead and delete link
                             txt.delete(begin,end)
                         else:
                             b = Button(txt)
@@ -853,7 +850,7 @@ class ExperWindow(Frame):
         if len(rows) > 1:
             for n in range(len(rows)):
                 print rows[n]
-            warn(self, 'corruption: duplicate exper!')
+            warn(self, 'database corruption: duplicate exper!')
         else:
             if len(rows) > 0:
                 self.rv.save(self.db, table='exper',
@@ -883,7 +880,8 @@ class ExperWindow(Frame):
 class SessionWindow(Frame):
     def __init__(self, master, db, animal, **kwargs):
         Frame.__init__(self, master, **kwargs)
-
+        
+        self.logwin = master
         self.db = db
         self.animal = animal
         self.n = 0
@@ -911,9 +909,10 @@ class SessionWindow(Frame):
             return 0
 
         if date:
+            # iterate through entries to find right date, if it exists..
             n = None
             for i in range(len(rows)):
-                if ("%s" % rows[i]['date']) == date:
+                if rows[i]['date'] == date or ("%s" % rows[i]['date']) == date:
                     n = i
                     break
             if n is None:
@@ -937,16 +936,14 @@ class SessionWindow(Frame):
                              """ ORDER BY exper ASC""" %
                              (d['animal'], d['date'],))
 
-        dstr = time.strftime('%Y-%m-%d [%a]',
+        dstr = time.strftime('%a %Y-%m-%d',
                              time.strptime(d['date'], '%Y-%m-%d'))
-        #self.datew.configure(text='%s :: %s     [%s@%s]' % \
-        #                     (d['animal'], dstr, self.db.db, self.db.host))
 
-        GuiWindow.root.winfo_toplevel().title('%s %s' % \
-                                                  (d['animal'], dstr))
+        GuiWindow.root.winfo_toplevel().title("db:%s `%s` %s" %
+                                              (self.db.db, d['animal'], dstr))
 
         # cache pointer to last record accessed in homedir for next time
-        cachestate(d['animal'], d['date'])
+        saveConfig(self)
 
         if self.check() > 0:
             Msg('inserted missing exper; refresh window!')
@@ -1039,15 +1036,30 @@ class SessionWindow(Frame):
 
         self.n = 1e6
 
-    def find(self):
-        s = ask(self, 'find (YYYY-MM-DD)', '')
+    def find_bydate(self):
+        s = ask(self, 'find date (YYYY-MM-DD)', '')
         if s:
             ss = string.split(s, '-')
-            if len(ss) == 3:
-                if not self.view(date=s):
-                    warn(self, "Can't find date: '%s'" % s)
+            if len(ss) != 3:
+                warn(self, "Invalid date: '%s'" % s)
+            elif not self.view(date=s):
+                warn(self, "Can\'t find date: '%s'" % s)
+
+    def find_byexper(self):
+        d = self.rv.getall()
+        s = ask(self, 'find exper/cell id (%s only)' % d['animal'], '')
+        if s:
+            # only look in current animal..
+            rows = self.db.query("""SELECT date FROM dfile """
+                                 """ WHERE exper='%s' and animal='%s'""" %
+                                 (s, d['animal']))
+            print rows
+            if len(rows) == 0:
+                warn(self, "Can\'t find exper: %s" % s)
             else:
-                    warn(self, "Invalid date: '%s'" % s)
+                d = rows[0]['date']
+                if not self.view(date=d):
+                    warn(self, "Can\'t find date: '%s'" % d)
 
     def check(self):
         """Check database to see if entry for specified date is
@@ -1066,7 +1078,7 @@ class SessionWindow(Frame):
             if int(row['exper'][-4:]) > 0:
                 link = "<elog:exper=%s/%s>" % (row['date'], row['exper'])
                 if string.find(d['note'], link) < 0:
-                    sys.stderr.write('%s in database, but not linked\n' % link)
+                    sys.stderr.write('elog: %s in database, but not linked\n' % link)
                     missing = missing + 1
                     d['note'] = d['note'] + '\n' + link + '\n'
 
@@ -1100,8 +1112,10 @@ class GuiWindow(Frame):
                          command=self.quit)
 
         menu.addmenu('Edit', '', '')
-        menu.addmenuitem('Edit', 'command', label='Find session by date (Alt-G)',
-                         command=lambda s=self: s.session.find())
+        menu.addmenuitem('Edit', 'command', label='Find session by date',
+                         command=lambda s=self: s.session.find_bydate())
+        menu.addmenuitem('Edit', 'command', label='Find session by exper/cell',
+                         command=lambda s=self: s.session.find_byexper())
         menu.addmenuitem('Edit', 'separator')
 
         GuiWindow.showlinks = IntVar()
@@ -1198,7 +1212,6 @@ class GuiWindow(Frame):
             self.session = None
         self.animal = animal
         self.jump(1e6)
-        #tk.winfo_toplevel().title('elog:%s' % animal)
 
     def refresh(self):
         self.jump(0)
@@ -1266,6 +1279,7 @@ class GuiWindow(Frame):
         return len(rows) > 0
 
     def quit(self):
+        saveConfig(self.session)
         self.save()
         self.db.close()
         self.destroy()
@@ -1330,6 +1344,32 @@ class GuiWindow(Frame):
 
         self.jump(0, save=0)
 
+def _configFile():
+    import os
+    return os.path.expanduser('~/.elogrc')
+
+def saveConfig(session):
+    import ConfigParser
+
+    c = ConfigParser.ConfigParser()
+    c.add_section('elog')
+    c.set('elog', 'animal', session.rv.getval('animal'))
+    c.set('elog', 'date', session.rv.getval('date'))
+    c.set('elog', 'show_data', session.logwin.showdatafiles.get())
+    c.set('elog', 'show_links', session.logwin.showlinks.get())
+    c.set('elog', 'show_deleted', session.logwin.showdel.get())
+
+    with open(_configFile(), 'w') as f:
+        c.write(f)
+
+def readConfig(session):
+    import ConfigParser
+
+    c = ConfigParser.ConfigParser()
+    with open(_configFile(), 'r') as f:
+        c.readfp(f)
+    return c
+            
 #############################################################3
 
 def usage(badarg=None, exit=1):
@@ -1373,7 +1413,7 @@ def animallist(db):
 
 def require_tk(tk):
     if tk is None:
-        sys.stderr.write("Can't initialize GUI\n")
+        sys.stderr.write('elog: Can\'t initialize GUI\n')
         sys.exit(0)
 
 def start():
@@ -1381,11 +1421,11 @@ def start():
     import calendar
 
     if len(getuser()) == 0:
-        sys.stderr.write('no user information available!\n')
+        sys.stderr.write('elog: no user information available!\n')
         sys.exit(1)
 
     if len(gethost()) == 0:
-        sys.stderr.write('no host/computer name available!\n')
+        sys.stderr.write('elog: no host/computer name available!\n')
         sys.exit(1)
 
     tk = None
@@ -1512,10 +1552,20 @@ def start():
         elif arg in find_animals(Database()):
             animal = arg
         else:
-            sys.stderr.write('unknown arg: %s\n' % arg)
+            sys.stderr.write('elog: unknown arg -- %s\n' % arg)
             sys.exit(1)
 
-    (_animal, _date) = cachestate()
+    try:
+        cfg = readConfig(None)
+        _animal = cfg.get('elog', 'animal')
+        _date = cfg.get('elog', 'date')
+    except:
+        # for backward compatibility
+        cfg = None
+        (_animal, _date) = old_cachestate()
+        if _animal is not None:
+            sys.stderr.write('elog: warning -- updating .elogrc\n')
+
     if not dump and animal is None:
         animal = _animal
     if not dump and date is None:
@@ -1534,7 +1584,7 @@ def start():
         sys.exit(0)
 
     if dump and animal is None:
-        sys.stderr.write("-dump requires -animal\n")
+        sys.stderr.write("elog: -dump requires -animal\n")
         sys.exit(0)
 
     if exper:
@@ -1543,9 +1593,13 @@ def start():
             sys.exit(0)
 
     alist = find_animals(Database())
+
     if (animal not in alist):
-        if (not new):
-            sys.stderr.write("'%s' doesn't exist, use -new\n" % animal)
+        if animal == '':
+            sys.stderr.write("elog: specify animal or use -new\n")
+            sys.exit(0)
+        elif (not new):
+            sys.stderr.write("elog: '%s' doesn't exist, use -new\n" % animal)
             sys.exit(0)
         else:
             if date is None:
@@ -1563,7 +1617,7 @@ def start():
 
     if dump:
         if outdir is None:
-            sys.stderr.write('must specify output directory with dump\n')
+            sys.stderr.write('elog: dump requires output directory\n')
             sys.exit(1)
         dumphtml.dump(outdir, Database(),
                       animal, count, rev=rev, date=date)
@@ -1592,10 +1646,10 @@ def start():
 
         if not logwin.exists(animal=animal, date=date):
             if not force_yes:
-                sys.stderr.write('animal=\'%s\' date=%s%s not in database.\n' % \
+                sys.stderr.write('elog: animal=\'%s\' date=%s%s not in database.\n' % \
                                  (animal, date, dow))
             if animal is None:
-                sys.stderr.write('Specify an animal to create new entry\n')
+                sys.stderr.write('elog: -animal required with -new\n')
                 sys.exit(1)
             else:
                 if not force_yes and \
@@ -1618,8 +1672,6 @@ def start():
                     lambda e, w=logwin: w.save())
     logwin.bind_all('<Alt-KeyPress-s>',
                     lambda e, w=logwin: w.save())
-    logwin.bind_all('<Alt-KeyPress-g>',
-                    lambda e, w=logwin: w.find())
     logwin.bind_all('<Alt-KeyPress-n>',
                     lambda e, w=logwin: w.new_exper())
     logwin.bind_all('<Alt-KeyPress-r>',
@@ -1637,9 +1689,13 @@ def start():
     logwin.bind_all('<Alt-Control-End>',
                     lambda e, w=logwin: w.jump(1e6))
 
-    #tk.winfo_toplevel().title('elog:%s' % animal)
     tk.protocol("WM_DELETE_WINDOW", logwin.quit)
     tk.deiconify()
+    if cfg is not None:
+        logwin.showdatafiles.set(cfg.get('elog', 'show_data'))
+        logwin.showlinks.set(cfg.get('elog', 'show_links'))
+        logwin.showdel.set(cfg.get('elog', 'show_deleted'))
+    
     logwin.jump(0)
     tk.wait_window(logwin)
 
