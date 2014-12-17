@@ -81,23 +81,40 @@ def emit_session(outdir, db, r):
     r['food'] = F("%d", r['food'])
     r['note'] = nlsqueeze(wrap(r['note']))
     r['fruit'] = F("%s", r['fruit'])
+    if r['restricted']:
+        r['restricted'] = '&#x2713;'
+    else:
+        r['restricted'] = ''
 
+    if r['tested']:
+        r['tested'] = '&#x2713;'
+    else:
+        r['restricted'] = ''
+
+    if r['ncorrect'] == 0:
+        r['ncorrect'] = ''
+        
+    if r['ntrials'] == 0:
+        r['ntrials'] = ''
+        
+        
+        
     s = ""
     s = s + \
         """<table class="tab_session">\n""" \
         """  <tr><td>\n""" \
         """    <table class="tab_sessioninfo">\n""" \
-        """      <tr><td align="RIGHT"><b>DATE</b>:</td><td>%(date)s</td></tr>\n""" \
-        """      <tr><td align="RIGHT"><b>ANIMAL</b>:</td><td>%(animal)s</td></tr>\n""" \
-        """      <tr><td align="RIGHT"><b>USER</b>:</td><td>%(user)s</td></tr>\n""" \
-        """      <tr><td align="RIGHT"><b>WATER</b>:</td><td>%(water_work)s/%(water_sup)s ml [=%(total)s ml]</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>FRUIT</b>:</td><td>%(fruit)s</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>FOOD</b>:</td> <td>%(food)s biscs</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>WEIGHT</b>:</td><td>%(weight)s kg</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>RESTRICTED</b>:</td><td>%(restricted)s</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>TESTED</b>:</td><td>%(tested)s</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>NCORRECT</b>:</td><td>%(ncorrect)s</td> </tr>\n""" \
-        """      <tr><td align="RIGHT"><b>NTRIALS</b>:</td><td>%(ntrials)s</td> </tr>\n""" \
+        """      <tr><td align="RIGHT"><b>DATE</b>:</td><td>%(date)s</td>\n""" \
+        """          <td align="RIGHT"><b>ANIMAL</b>:</td><td>%(animal)s</td>\n""" \
+        """          <td align="RIGHT"><b>USER</b>:</td><td>%(user)s</td></tr>\n""" \
+        """      <tr><td align="RIGHT"><b>REST</b>:</td><td>%(restricted)s</td>\n""" \
+        """          <td align="RIGHT"><b>TEST</b>:</td><td>%(tested)s</td>\n""" \
+        """          <td align="RIGHT"><b>NCOR</b>:</td><td>%(ncorrect)s</td>\n""" \
+        """          <td align="RIGHT"><b>NTRL</b>:</td><td>%(ntrials)s</td> </tr>\n""" \
+        """      <tr><td align="RIGHT"><b>FRUIT</b>:</td><td>%(fruit)s</td>\n""" \
+        """          <td align="RIGHT"><b>WATER</b>:</td><td>%(water_work)s+%(water_sup)s=%(total)sml</td><td>[wrk+sup=tot]</td></tr>\n""" \
+        """      <tr><td align="RIGHT"><b>WEIGHT</b>:</td><td>%(weight)s kg</td>\n""" \
+        """          <td align="RIGHT"><b>FOOD</b>:</td> <td>%(food)s biscs</td> </tr>\n""" \
         """    </table>\n""" \
         """  </td></tr>\n""" \
         """  <tr><td>\n""" \
@@ -166,13 +183,22 @@ def emit_session(outdir, db, r):
     # go through the entry and replace all attachment links with
     # the actual attachment images themselves
     s = string.strip(s, '\n')
-    pat = re.compile('<elog:attach=.*>')
+    pat = re.compile('<elog:attach=[0-9]*>')
     while 1:
         x = re.search(pat, s)
         if x is None: break
         link = s[x.span()[0]:x.span()[1]]
-        id = int(link[1:-1].split('=')[1])
+        try:
+            id = int(link[1:-1].split('=')[1])
+        except:
+            keyboard()
         s = s.replace(link, emit_attachment(outdir, db, id))
+
+    # clean up redundant whitespace stuff
+    while 1:
+        (s, n) = re.subn('<br>\s*<br>', '<br>', s)
+        if n == 0: break
+    
     return s
 
 def emit_exper(outdir, db, r):
@@ -270,16 +296,13 @@ def emit_attachment(outdir, db, id):
     open(attachdir + '/' + fname , 'w').write(img)
 
     if len(row['title']) == 0:
-        row['title'] = 'no title'
+        row['title'] = ''
 
     # note: when you print, images don't cross page boundaries!
     s = ""
     s = s + """<table class="tab_attachment">\n"""
     s = s + """ <tr><td>\n"""
-    if len(row['title']):
-        s = s + """ [%(user)s:%(date)s] '%(title)s'""" % row
-    else:
-        s = s + """ [%(user)s:%(date)s]""" % row
+    s = s + """ [%(user)s:%(date)s] %(title)s""" % row
     s = s + """ </td></tr>\n"""
     if len(row['note']):
         s = s + """ <tr><td>\n"""
@@ -417,7 +440,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
                       """  .tab_dfile { background: #c0c0c0; }\n"""
                       """  .tab_attachment { border:1px solid black; }\n"""
                       """  .tab_att { background: #c0c0c0; border:1px solid black}\n"""
-                      """  .attachimg { max-width: 600px; }\n"""
+                      """  .attachimg { border:1px solid black; max-width: 600px; }\n"""
                       """  table { border:0px solid black; }\n"""
                       """  body { font-family: monospace; }\n"""
                       """  @media print { .navbar { display:none; }\n"""
@@ -434,7 +457,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
 
             out.write("""<A NAME="top">\n""")
             out.write(outbuf)
-            out.write("""<A NAME="bottom">\n""")
+            out.write("""\n<A NAME="bottom">\n""")
             out.close()
 
             elist = db.query("""
