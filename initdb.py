@@ -108,7 +108,6 @@ def init_dfile(db):
     crap     INT,
     preferred INT,
     note     TEXT,
-    attachlist TEXT,
     locked   INT,
     tags     VARCHAR(1024),
     lastmod  VARCHAR(255)
