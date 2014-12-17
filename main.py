@@ -382,7 +382,7 @@ class RecordView(Frame):
                 begin = '0.0'
                 while 1:
                     # replace EXPER hyperlinks w/ exper widgets
-                    begin = txt.search('<elog:exper=[0-9]*>',
+                    begin = txt.search('<elog:exper=.*[0-9]*>',
                                      begin, stopindex=END, regexp=1)
                     if not begin:
                         break
