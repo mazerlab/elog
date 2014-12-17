@@ -18,7 +18,7 @@ exe:
 	rm -rf $(INSTALLROOT)/lib/elog
 	mkdir $(INSTALLROOT)/lib/elog
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
-	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog elogatt dbfind qhistory eloghist
+	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog elogatt dbfind qhistory
 	cp dbfind.m elogatt.m $(INSTALLROOT)/pypeextra/
 
 scripts:
@@ -33,7 +33,7 @@ testdata:
 	./test-elog -r
 
 clean:
-	/bin/rm -rf *.pyc \#*~ elog elogatt dbfind
+	/bin/rm -rf *.pyc \#*~ elog
 
 # output of `make schema` can be used to initialize a new database
 schema:
