@@ -53,7 +53,7 @@ def ins_attachment(event, w):
     txt.mark_unset('tmp')
 
     b = Button(txt)
-    b.im = pil_getattach(w.db, id, (256,256))
+    b.im = pil_getattach(w.db, id, (128,128))
     b.config(image=b.im,
              command=lambda m=w,db=w.db,id=id: \
              AttachmentViewer(m,db,id))
@@ -412,7 +412,7 @@ class RecordView(Frame):
                         end = end+'+1c'
                         txt.tag_add('attachlink', begin, end)
                         id = int(txt.get(begin, end)[1:-1].split('=')[1])
-                        im = pil_getattach(self.db, id, (256,256))
+                        im = pil_getattach(self.db, id, (128,128))
                         if im is None:
                             # attachement deleted -- go ahead and delete link
                             txt.delete(begin,end)
