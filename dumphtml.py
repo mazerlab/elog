@@ -163,8 +163,16 @@ def emit_session(outdir, db, r):
                 newlink = "-> %s (OK):" % (dfile,)
             s = before + newlink + after
 
+    # go through the entry and replace all attachment links with
+    # the actual attachment images themselves
     s = string.strip(s, '\n')
-
+    pat = re.compile('<elog:attach=.*>')
+    while 1:
+        x = re.search(pat, s)
+        if x is None: break
+        link = s[x.span()[0]:x.span()[1]]
+        id = int(link[1:-1].split('=')[1])
+        s = s.replace(link, emit_attachment(outdir, db, id))
     return s
 
 def emit_exper(outdir, db, r):
@@ -223,10 +231,6 @@ def emit_dfiles(outdir, db, rows):
 
     alist = []
     for d in rows:
-        for a in d['attachlist'].split(','):
-            if len(a) > 0:
-                alist.append(a)
-
         d['preferred'] = YN(d['preferred'],'*',' ')
         d['note'] = nlsqueeze(wrap(d['note']))
 
@@ -246,20 +250,13 @@ def emit_dfiles(outdir, db, rows):
 
     s = s + """</table>\n"""
 
-    if len(alist) > 0:
-        n = 1
-        for id in alist:
-            s = s + """<br>\n"""
-            s = s + """<table class="tab_att">\n"""
-            s = s + """ <tr><td>\n"""
-            s = s + emit_attachment(outdir, db, id, 'ID#%s' % (id,))
-            s = s + """ </td></tr>\n"""
-            s = s + """</table>\n"""
-            n = n + 1
-
     return s
 
-def emit_attachment(outdir, db, id, tag):
+def emit_attachment(outdir, db, id):
+    """Returns HTML fragment to represent the attached figure. This
+    text should replace to original pseudo tag in the original text
+    """
+    
     rows = db.query("""
     SELECT * FROM attachment WHERE attachmentID=%s
     """ % (id,))
@@ -275,15 +272,18 @@ def emit_attachment(outdir, db, id, tag):
     if len(row['title']) == 0:
         row['title'] = 'no title'
 
-    # note: when you print, images don'ts seem to cross page boundaries!
+    # note: when you print, images don't cross page boundaries!
     s = ""
-    s = s + """<table>\n"""
+    s = s + """<table class="tab_attachment">\n"""
     s = s + """ <tr><td>\n"""
-    s = s + tag + """ [%(user)s:%(date)s] %(title)s""" % row
+    if len(row['title']):
+        s = s + """ [%(user)s:%(date)s] '%(title)s'""" % row
+    else:
+        s = s + """ [%(user)s:%(date)s]""" % row
     s = s + """ </td></tr>\n"""
     if len(row['note']):
         s = s + """ <tr><td>\n"""
-        s = s + tag + """%(note)s\n""" % row
+        s = s + """%(note)s\n""" % row
         s = s + """ </td></tr>\n"""
     s = s + """ <tr><td>\n"""
     s = s + """  <img class="attachimg" src="attached/%s">\n""" % fname
@@ -415,6 +415,7 @@ def dump(outdir, db, animal, count, rev=None, date=None):
                       """  .tab_experinfo { background: #e0e0e0; }\n"""
                       """  .tab_unit { background: #d0d0d0; }\n"""
                       """  .tab_dfile { background: #c0c0c0; }\n"""
+                      """  .tab_attachment { border:1px solid black; }\n"""
                       """  .tab_att { background: #c0c0c0; border:1px solid black}\n"""
                       """  .attachimg { max-width: 600px; }\n"""
                       """  table { border:0px solid black; }\n"""
