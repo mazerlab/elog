@@ -1,0 +1,12 @@
+#!/bin/sh
+# install template file as executable (do LIB substituion)
+
+LIBDIR=$1; shift
+BINDIR=$1; shift
+
+for NAME in $*; do
+  sed s^%%LIB%%^${LIBDIR}^g <${NAME}.template >${BINDIR}/${NAME}
+  chmod a+x ${BINDIR}/${NAME}
+  echo " installed " $NAME
+done
+
