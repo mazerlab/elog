@@ -120,7 +120,7 @@ def tag_select(parent):
 def pil_getattach(db, id, size=None):
     import PIL.Image
     import StringIO
-    import ImageTk
+    import PIL.ImageTk
 
     rows = db.query("""SELECT * FROM attachment"""
                     """ WHERE attachmentID=%d""" % (id,))
@@ -130,7 +130,7 @@ def pil_getattach(db, id, size=None):
     p = PIL.Image.open(StringIO.StringIO(imstr))
     if size:
         p.thumbnail(size)
-    im = ImageTk.PhotoImage(p)
+    im = PIL.ImageTk.PhotoImage(p)
     return im
 
 class AttachmentViewer(Toplevel):
@@ -174,12 +174,12 @@ class AttachmentViewer(Toplevel):
     def getattach(self):
         import PIL.Image
         import StringIO
-        import ImageTk
+        import PIL.ImageTk
 
         rows = self.db.query("""SELECT * FROM attachment"""
                              """ WHERE attachmentID=%d""" % (self.id,))
         imstr = rows[0]['data'].decode('base64')
-        im = ImageTk.PhotoImage(PIL.Image.open(StringIO.StringIO(imstr)))
+        im = PIL.ImageTk.PhotoImage(PIL.Image.open(StringIO.StringIO(imstr)))
         return im, rows[0]
 
     def db_delete(self):
