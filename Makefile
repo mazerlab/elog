@@ -1,7 +1,11 @@
+# note
+
 ifeq ($(shell domainname), mlab)
   INSTALLROOT ?= /auto/share
+  MATLABDIR = $(INSTALLROOT)/pypeextra
 else
   INSTALLROOT ?= /usr/local
+  MATLABDIR = $(INSTALLROOT)/matlab
 endif
 
 MODULES=*.py
@@ -12,11 +16,12 @@ install: exe
 
 exe: config
 	rm -rf $(INSTALLROOT)/lib/elog
-	mkdir $(INSTALLROOT)/lib/elog
+	mkdir -p $(INSTALLROOT)/lib/elog
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
 		elog elogatt dbfind qhistory
-	cp dbfind.m elogatt.m $(INSTALLROOT)/pypeextra/
+	mkdir -p $(MATLABDIR)
+	cp dbfind.m elogatt.m $(MATLABDIR)
 
 mlabscripts:
 	chmod +x scripts/*
