@@ -1399,15 +1399,16 @@ def start():
     for arg in sys.argv[1:]:
         if arg[0:2] == '--':
             arg = arg[1:]
-        elif isarg(arg, '-y'):
+            
+        if isarg(arg, '-y'):
             force_yes = 1
-        elif isarg(arg, '-rev') or isarg(arg, '--rev'):
+        elif isarg(arg, '-rev'):
             rev = 1
-        elif isarg(arg, '-r') or isarg(arg, '--readonly'):
+        elif isarg(arg, '-r'):
             readonly = 1
-        elif isarg(arg, '-info') or isarg(arg, '--info'):
+        elif isarg(arg, '-info'):
             info = 1
-        elif isarg(arg, '-q') or isarg(arg, '--query'):
+        elif isarg(arg, '-q'):
             require_tk(tk)
             animal = tkdialogs.select(find_animals(Database()))
             if animal is None:
@@ -1416,18 +1417,18 @@ def start():
             date = tkdialogs.getdate(tk)
             if date is None:
                 sys.exit(0)
-        elif isarg(arg, '-animal=') or isarg(arg, '--animal='):
+        elif isarg(arg, '-animal='):
             animal = string.split(arg, '=')[1]
-        elif isarg(arg, '-animal') or isarg(arg, '--animal'):
+        elif isarg(arg, '-animal'):
             require_tk(tk)
             animal = tkdialogs.select(find_animals(Database()))
             if animal is None:
                 sys.exit(0)
         elif isarg(arg, '-a'):
             animal = arg[2:]
-        elif isarg(arg, '-new') or isarg(arg, '--new'):
+        elif isarg(arg, '-new'):
             new = 1
-        elif isarg(arg, '-date=') or isarg(arg, '--date='):
+        elif isarg(arg, '-date='):
             date = string.split(arg, '=')[1]
             try:
                 # -1 for yesterday, etc..
@@ -1448,32 +1449,32 @@ def start():
                           (p[0].tm_year,p[0].tm_mon,p[0].tm_mday,)
                 except ImportError:
                     pass
-        elif isarg(arg, '-date') or isarg(arg, '--date'):
+        elif isarg(arg, '-date'):
             require_tk(tk)
             date = tkdialogs.getdate(tk)
             if date is None:
                 sys.exit(0)
-        elif isarg(arg, '-exper=') or isarg(arg, '--exper='):
+        elif isarg(arg, '-exper='):
             exper = string.split(arg, '=')[1]
-        elif isarg(arg, '-today') or isarg(arg, '--today'):
+        elif isarg(arg, '-today'):
             date = '%s' % datetime.date(1,1,1).today()
-        elif isarg(arg, '-last') or isarg(arg, '--last'):
+        elif isarg(arg, '-last'):
             last = 1
-        elif isarg(arg, '-dump=') or isarg(arg, '--dump='):
+        elif isarg(arg, '-dump='):
             dump = 1
             count = int(string.split(arg, '=')[1])
-        elif isarg(arg, '-dump') or isarg(arg, '--dump'):
+        elif isarg(arg, '-dump'):
             dump = 1
             count = 0
-        elif isarg(arg, '-out=') or isarg(arg, '--out='):
+        elif isarg(arg, '-out='):
             outdir = string.split(arg, '=')[1]
-        elif isarg(arg, '-data') or isarg(arg, '--data'):
+        elif isarg(arg, '-data'):
             dfile = 1
             force = None
-        elif isarg(arg, '-forcedata') or isarg(arg, '--forcedata'):
+        elif isarg(arg, '-forcedata'):
             dfile = 1
             force = 1
-        elif isarg(arg, '-help') or isarg(arg, '--help'):
+        elif isarg(arg, '-help'):
             usage()
         elif os.path.exists(arg):
             # datafile to add
