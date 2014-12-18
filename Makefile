@@ -33,7 +33,7 @@ test: config
 	@chmod +x ./elog
 
 config:
-	./mk_dbfind
+	sh ./mk_dbfind.sh
 	cat sqlconfig.sh >dbsettings.py
 
 clean:
@@ -43,7 +43,7 @@ clean:
 # machine in the mazer lab only.. it generates a one-time use script
 # that 'make initdb' will use to build an empty database.
 dist: 
-	./mk_dbmaker.sh
+	sh ./mk_dbmaker.sh
 
 initdb:
 	sh ./dbmaker.sh
