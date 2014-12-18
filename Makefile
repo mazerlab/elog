@@ -33,7 +33,7 @@ test: config
 	@chmod +x ./elog
 
 config:
-	sh ./mk_dbfind.sh
+	sh ./mk_dbfind.sh >dbfind.m
 	cat sqlconfig.sh >dbsettings.py
 
 clean:
