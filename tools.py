@@ -13,7 +13,7 @@ import MySQLdb
 from Tkinter import *
 import tkFont
 import tkMessageBox
-import Pmw_1_3_2 as Pmw
+import PmwBundle as Pmw
 
 # from keyboard import keyboard
 

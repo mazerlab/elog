@@ -28,7 +28,7 @@ from keyboard import keyboard
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
     from tkMessageBox import askyesno
-    import Pmw_1_3_2 as Pmw
+    import PmwBundle as Pmw
     import tkdialogs
 
 from tools import *

@@ -8,7 +8,7 @@
 import Tkinter
 Tk = Tkinter
 
-import Pmw_1_3_2 as Pmw
+import PmwBundle as Pmw
 
 def today():
     import time
