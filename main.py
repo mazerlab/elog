@@ -34,7 +34,6 @@ if os.environ.has_key('DISPLAY'):
 from tools import *
 import dumphtml
 import layout
-import initdb
 
 MINDTB = 10.0
 logwin = None
@@ -994,7 +993,6 @@ class SessionWindow(Frame):
             rows = self.db.query("""SELECT date FROM dfile """
                                  """ WHERE exper='%s' and animal='%s'""" %
                                  (s, d['animal']))
-            print rows
             if len(rows) == 0:
                 warn(self, "Can\'t find exper: %s" % s)
             else:
@@ -1401,9 +1399,6 @@ def start():
     for arg in sys.argv[1:]:
         if arg[0:2] == '--':
             arg = arg[1:]
-
-        if isarg(arg, '--init'):
-            init = 1
         elif isarg(arg, '-y'):
             force_yes = 1
         elif isarg(arg, '-rev') or isarg(arg, '--rev'):
@@ -1511,11 +1506,6 @@ def start():
         animal = _animal
     if not dump and date is None:
         date = _date
-
-    if init:
-        # initialize an empty database -- use with CAUTION!!!
-        initdb.init_empty_db()
-        sys.exit(0)
 
     db = Database()
 
