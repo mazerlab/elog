@@ -11,25 +11,21 @@
 # otherwise runs elog
 # 
 
-make test-inplace
+. ./sqlconfig.sh
 
-host=sql; user=mlab;pass=mlab
-if [ `hostname` = sage ]; then
-  host=localhost; user=root; pass=f00lish1
-fi
 if [ "$1" = "-r" ]; then
+  # refresh _test databae
   shift
-  mysqladmin --force -h$host -u$user -p$pass drop mlabdata_test
-  mysqladmin --force -h$host -u$user -p$pass create mlabdata_test
-  gunzip <testdata.sql.gz | mysql -h$host -u$user -p$pass mlabdata_test
+  mysqldump -hsql -u${USER} -p${PASS} --add-drop-database --databases ${DB} \
+		| sed s/${DB}/${DB}_test/g \
+		| gzip >testdata.sql.gz
+  mysqladmin --force -h${HOST} -u${USER} -p${PASS} drop ${DB}_test
+  mysqladmin --force -h${HOST} -u${USER} -p${PASS} create ${DB}_test
+  gunzip <testdata.sql.gz | mysql -h${HOST} -u${USER} -p${PASS} ${DB}_test
   exit
 fi
-if [ "$1" = "-a" ]; then
-  echo "testing elogatt"
-  env ELOG_HOST=$host ELOG_USER=$user ELOG_PASSWD=$pass \
-      ELOG_DB=mlabdata_test ./elogatt $*
-else
-  echo "testing elog"
-  env ELOG_HOST=$host ELOG_USER=$user ELOG_PASSWD=$pass \
-      ELOG_DB=mlabdata_test ./elog $*
-fi
+
+make test
+echo "[running test copy of elog on ${DB}_test]"
+env ELOG_HOST=${HOST} ELOG_USER=${USER} ELOG_PASS=${PASS} \
+      ELOG_DB=${DB}_test ./elog $*

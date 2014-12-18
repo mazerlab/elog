@@ -1,15 +1,33 @@
 #!/bin/sh
 
+if [ `domainname` != mlab ];
+  echo "This should only be run in the mazer lab!"
+  exit 1
+fi
+
 # create dbmaker.sh -- shell script that can be used
 # to build an empty 'mlabdata' database schema
 
+. ./sqlconfig.sh
+
 cat <<XXX >dbmaker.sh
 #!/bin/sh
-mysqladmin -hsql -umlab -pmlab create mlabdata <<EOF
-mysql -hsql -umlab -pmlab mlabdata <<EOF
+
+cat ./sqlconfig.sh
+
+read -p "  Ok to make database? [must type Y to confirm] " x
+if [ "\$x" != "Y" ]; then
+  echo "aborted"
+  exit 1
+fi
+
+. ./sqlconfig.sh
+
+mysqladmin -h\${HOST} -u\${USER} -p\${PASS} create \${DB} <<EOF
+mysql -h\${HOST} -u\${USER} -p\${PASS} \${DB} <<EOF
 XXX
 
-mysqldump -hsql -umlab -pmlab -d mlabdata >>dbmaker.sh
+mysqldump -h${HOST} -u${USER} -p${PASS} -d ${DB} >>dbmaker.sh
 
 cat <<XXX >>dbmaker.sh
 EOF

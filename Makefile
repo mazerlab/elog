@@ -6,35 +6,44 @@ endif
 
 MODULES=*.py
 
+mlab: exe mlabscripts
 
-test-inplace:
+install: exe
+
+exe: config
+	rm -rf $(INSTALLROOT)/lib/elog
+	mkdir $(INSTALLROOT)/lib/elog
+	cp $(MODULES) $(INSTALLROOT)/lib/elog
+	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
+		elog elogatt dbfind qhistory
+	cp dbfind.m elogatt.m $(INSTALLROOT)/pypeextra/
+
+mlabscripts:
+	chmod +x scripts/*
+	cp scripts/* $(INSTALLROOT)/pypeextra
+
+# copy live database into for _test for testing with test-elog
+testdata:
+	./test-elog -r
+
+# make an inplace version of elog for testing..
+test: config
 	@sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elog.template >./elog
 	@chmod +x ./elog
 
-install: exe scripts
-
-exe:
-	rm -rf $(INSTALLROOT)/lib/elog
-	mkdir $(INSTALLROOT)/lib/elog
-	cp $(MODULES) $(INSTALLROOT)/lib/elog
-	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog elogatt dbfind qhistory
-	cp dbfind.m elogatt.m $(INSTALLROOT)/pypeextra/
-
-scripts:
-	chmod +x scripts/*
-	cp scripts/* $(INSTALLROOT)/pypeextra
-
-# dump live database for testing using 'test-elog'
-testdata:
-	mysqldump -hsql -umlab -pmlab --add-drop-database --databases mlabdata \
-		| sed s/mlabdata/mlabdata_test/g \
-		| gzip >testdata.sql.gz
-	./test-elog -r
+config:
+	./mk_dbfind
+	cat sqlconfig.sh >dbsettings.py
 
 clean:
-	/bin/rm -rf *.pyc \#*~ elog
+	/bin/rm -rf *.pyc \#*~ elog dbsettings.py dbfind
 
-# output of `make schema` can be used to initialize a new database
-schema:
-	mysqldump -d -hsql -umlab -pmlab mlabdata
+# This creates the database making script. It should be run on a
+# machine in the mazer lab only.. it generates a one-time use script
+# that 'make initdb' will use to build an empty database.
+dist: 
+	./mk_dbmaker.sh
+
+initdb:
+	sh ./dbmaker.sh

@@ -148,7 +148,7 @@ class Database(object):
         if user is None:
             self.user = _env('ELOG_USER', dbsettings.USER)
         if passwd is None:
-            self.passwd = _env('ELOG_PASSWD', dbsettings.PASSWD)
+            self.passwd = _env('ELOG_PASS', dbsettings.PASS)
 
         self.connect()
 

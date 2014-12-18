@@ -1,7 +1,18 @@
 #!/bin/sh
-mysqladmin -hsql -umlab -pmlab create mlabdata <<EOF
-mysql -hsql -umlab -pmlab mlabdata <<EOF
--- MySQL dump 10.13  Distrib 5.5.35, for debian-linux-gnu (x86_64)
+
+cat ./sqlconfig.sh
+
+read -p "  Ok to make database? [must type Y to confirm] " x
+if [ "$x" != "Y" ]; then
+  echo "aborted"
+  exit 1
+fi
+
+. ./sqlconfig.sh
+
+xmysqladmin -h${HOST} -u${USER} -p${PASS} create ${DB} <<EOF
+xmysql -h${HOST} -u${USER} -p${PASS} ${DB} <<EOF
+-- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
 -- Host: sql    Database: mlabdata
 -- ------------------------------------------------------
@@ -39,7 +50,7 @@ CREATE TABLE `attachment` (
   `tags` varchar(1024) DEFAULT NULL,
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `attachmentID` (`attachmentID`)
-) ENGINE=MyISAM AUTO_INCREMENT=222 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=649 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +79,7 @@ CREATE TABLE `dfile` (
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `dfileID` (`dfileID`),
   UNIQUE KEY `src` (`src`)
-) ENGINE=MyISAM AUTO_INCREMENT=17698 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=19053 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,7 +102,7 @@ CREATE TABLE `exper` (
   `tags` varchar(1024) DEFAULT NULL,
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `experID` (`experID`)
-) ENGINE=MyISAM AUTO_INCREMENT=3436 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3994 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,12 +134,16 @@ CREATE TABLE `session` (
   `thweight` double DEFAULT NULL,
   `ncorrect` int(11) DEFAULT NULL,
   `ntrials` int(11) DEFAULT NULL,
+  `health_stool` int(11) DEFAULT NULL,
+  `health_urine` int(11) DEFAULT NULL,
+  `health_skin` int(11) DEFAULT NULL,
+  `health_pcv` int(11) DEFAULT NULL,
   `note` text,
   `locked` int(11) DEFAULT NULL,
   `tags` varchar(1024) DEFAULT NULL,
   `lastmod` varchar(255) DEFAULT NULL,
   UNIQUE KEY `noteID` (`sessionID`)
-) ENGINE=MyISAM AUTO_INCREMENT=4380 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=5036 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -164,7 +179,7 @@ CREATE TABLE `unit` (
   `lastmod` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`unitID`),
   UNIQUE KEY `unitID` (`unitID`)
-) ENGINE=MyISAM AUTO_INCREMENT=1639 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1913 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -176,5 +191,5 @@ CREATE TABLE `unit` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-03-10 16:37:00
+-- Dump completed on 2014-12-18 10:30:32
 EOF
