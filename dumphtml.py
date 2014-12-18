@@ -89,7 +89,7 @@ def emit_session(outdir, db, r):
     if r['tested']:
         r['tested'] = '&#x2713;'
     else:
-        r['restricted'] = ''
+        r['tested'] = ''
 
     if r['ncorrect'] == 0:
         r['ncorrect'] = ''

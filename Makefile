@@ -23,6 +23,8 @@ exe: config
 	mkdir -p $(MATLABDIR)
 	cp dbfind.m elogatt.m $(MATLABDIR)
 
+# these are custom scripts for the mazer lab that generate on-line
+# web-accessible dumps of the logs
 mlabscripts:
 	chmod +x scripts/*
 	cp scripts/* $(INSTALLROOT)/pypeextra
