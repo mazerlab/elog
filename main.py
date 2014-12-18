@@ -827,8 +827,6 @@ class SessionWindow(Frame):
         self.n = 0
 
         f = Frame(self)
-        #self.datew = Label(f, text="", fg='blue', anchor=W)
-        #self.datew.pack(side=LEFT, fill=X, expand=1)
 
         self.status = Label(f, text="", fg='red', anchor=W, relief=SUNKEN)
         self.status.pack(side=LEFT, fill=X, expand=1)
@@ -1055,7 +1053,6 @@ class GuiWindow(Frame):
                          command=lambda s=self: s.session.find_bydate())
         menu.addmenuitem('Edit', 'command', label='Find session by exper/cell',
                          command=lambda s=self: s.session.find_byexper())
-        menu.addmenuitem('Edit', 'separator')
 
         GuiWindow.showlinks = IntVar()
         GuiWindow.showlinks.set(0)
@@ -1080,6 +1077,12 @@ class GuiWindow(Frame):
 
         menu.addmenuitem('Edit', 'command', label='tagtest',
                          command=lambda tk=master: tag_select(tk))
+
+        menu.addmenuitem('Edit', 'separator')
+        menu.addmenuitem('Edit', 'command', label='Attach window (Alt-A)',
+                         command=lambda s=self: info(s,
+                         """Type Alt-A in text window, then """
+                         """click in window to attach."""))
 
         menu.addmenu('Animals', '', '')
         for a in find_animals(db):

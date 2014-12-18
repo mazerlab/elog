@@ -289,15 +289,19 @@ def ask(master, prompt, default):
     else:
         return None
 
-def warn(master, mesg, buttons=("Dismiss",), timeout=None):
+def info(master, mesg, **kwargs):
+    warn(master, mesg, title='Info', icon_bitmap=None, **kwargs)
+
+def warn(master, mesg, buttons=("Dismiss",), timeout=None,
+         title='Warning', icon_bitmap='warning'):
     """
     Simple warning message dialog box
     """
     x, y = master.winfo_pointerxy()   # -1 if off screen
     w = Pmw.MessageDialog(master,
-                          iconpos = 'w',
-                          icon_bitmap = 'warning',
-                          title='Warning',
+                          iconpos='w',
+                          icon_bitmap=icon_bitmap,
+                          title=title,
                           buttons=buttons,
                           defaultbutton=0,
                           message_text=mesg)
