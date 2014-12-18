@@ -3,11 +3,6 @@ import PmwColor
 Color = PmwColor
 del PmwColor
 
-import PmwBlt
-Blt = PmwBlt
-del PmwBlt
-
-
 ### Loader functions:
 
 _VERSION = '1.3'
@@ -1444,6 +1439,7 @@ def initialise(
     # Do not use blt busy command if noBltBusy is set.  Otherwise,
     # use blt busy if it is available.
     global _haveBltBusy
+    _haveBltBusy
     if noBltBusy:
         _haveBltBusy = 0
 
@@ -1639,16 +1635,19 @@ _haveBltBusy = None
 def _havebltbusy(window):
     global _busy_hold, _busy_release, _haveBltBusy
     if _haveBltBusy is None:
-        import PmwBlt
-        _haveBltBusy = PmwBlt.havebltbusy(window)
-        _busy_hold = PmwBlt.busy_hold
-        if os.name == 'nt':
-            # There is a bug in Blt 2.4i on NT where the busy window
-            # does not follow changes in the children of a window.
-            # Using forget works around the problem.
-            _busy_release = PmwBlt.busy_forget
-        else:
-            _busy_release = PmwBlt.busy_release
+        try:
+            import PmwBlt
+            _haveBltBusy = PmwBlt.havebltbusy(window)
+            _busy_hold = PmwBlt.busy_hold
+            if os.name == 'nt':
+                # There is a bug in Blt 2.4i on NT where the busy window
+                # does not follow changes in the children of a window.
+                # Using forget works around the problem.
+                _busy_release = PmwBlt.busy_forget
+            else:
+                _busy_release = PmwBlt.busy_release
+        except ImportError:
+            _haveBltBusy = 0
     return _haveBltBusy
 
 class _BusyWrapper:
