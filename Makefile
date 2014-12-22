@@ -21,7 +21,9 @@ exe: config
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
 		elog elogatt dbfind qhistory
 	mkdir -p $(MATLABDIR)
-	cp dbfind.m elogatt.m $(MATLABDIR)
+	sed s/%SQLGLOBALS%/$(tr -d \\n < sqlconfig.sh)/g \
+		<dbfind.m > $(MATLABDIR)/dbfind.m
+	cp elogatt.m $(MATLABDIR)
 
 # these are custom scripts for the mazer lab that generate on-line
 # web-accessible dumps of the logs
