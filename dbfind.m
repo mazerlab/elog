@@ -31,7 +31,18 @@ end
 
 %% Parameters
 
-%SQLGLOBALS%
+% default sql parameters -- this is potentially confusing, but the
+% idea is we try to load settings from sqlconfig.sh (for testing
+% in-place), but if that doesn't work, the SQLGLOBALS tag will be
+% expanded during by the Makefile during installation
+
+try
+  f=fopen('sqlconfig.sh', 'r');
+  eval(char(fread(f)'));
+  fclose(f);
+catch
+  %SQLGLOBALS%
+end
 
 assert(~isempty(pattern), 'pattern required');
 
