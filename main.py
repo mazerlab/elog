@@ -307,7 +307,7 @@ class RecordView(Frame):
                     e.component('entry')['state'] = state
                     e.pack(expand=1, fill=BOTH)
                     if state == DISABLED:
-                        e.component('label')['fg'] = 'blue'
+                        e.component('label')['fg'] = 'red'
                     else:
                         e.component('label')['fg'] = 'black'
                 elif validator == TEXT:
@@ -333,7 +333,7 @@ class RecordView(Frame):
                                                        foreground='red')
                     e.component('text')['state'] = state
                     if state == DISABLED:
-                        e.component('label')['fg'] = 'blue'
+                        e.component('label')['fg'] = 'red'
                     else:
                         e.component('label')['fg'] = 'black'
                 elif validator == BOOL:
@@ -350,7 +350,7 @@ class RecordView(Frame):
                     e.component('entry')['state'] = state
                     e.pack(expand=1, fill=BOTH)
                     if state == DISABLED:
-                        e.component('label')['fg'] = 'blue'
+                        e.component('label')['fg'] = 'red'
                     else:
                         e.component('label')['fg'] = 'black'
 
@@ -828,7 +828,7 @@ class SessionWindow(Frame):
 
         f = Frame(self)
 
-        self.status = Label(f, text="", fg='red', anchor=W, relief=SUNKEN)
+        self.status = Label(f, text="", fg='blue', anchor=W, relief=SUNKEN)
         self.status.pack(side=LEFT, fill=X, expand=1)
 
         f.pack(side=TOP, fill=X, expand=0, pady=2)

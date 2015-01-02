@@ -21,8 +21,7 @@ exe: config
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
 		elog elogatt dbfind qhistory
 	mkdir -p $(MATLABDIR)
-	sed s/%SQLGLOBALS%/$(tr -d \\n < sqlconfig.sh)/g \
-		<dbfind.m > $(MATLABDIR)/dbfind.m
+	sh mk_dbfind.sh > $(MATLABDIR)/dbfind.m
 	cp elogatt.m $(MATLABDIR)
 
 # these are custom scripts for the mazer lab that generate on-line
@@ -32,15 +31,13 @@ mlabscripts:
 	cp scripts/* $(INSTALLROOT)/pypeextra
 
 config:
-	sh ./mk_dbfind.sh >dbfind.m
 	cat sqlconfig.sh >dbsettings.py
 
 initdb:
 	sh ./dbmaker.sh
 
 clean:
-	/bin/rm -rf *.pyc \#*~ \
-		elog dbsettings.py dbfind.m
+	/bin/rm -rf *.pyc \#*~ elog dbsettings.py
 
 ##############################################################
 #

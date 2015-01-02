@@ -1,4 +1,4 @@
-function pf = dbfind(pattern, varargin)
+function pf = foo(pattern, varargin)
 %function pf = dbfind(pattern, ...opts...)
 %
 % Query elog database to find cells based on src filename:
