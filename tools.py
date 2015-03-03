@@ -313,6 +313,24 @@ def warn(master, mesg, buttons=("Dismiss",), timeout=None,
     else:
         return w.activate(geometry='+%d+%d' % (x,y))
 
+
+def askyesno(master, title, msg, icon_bitmap='warning'):
+    """
+    Simple yes/no dialog box under mouse
+    """
+    x, y = master.winfo_pointerxy()   # -1 if off screen
+    w = Pmw.MessageDialog(master,
+                          iconpos='w',
+                          icon_bitmap=icon_bitmap,
+                          title=title,
+                          buttons=("Yes", "No"),
+                          defaultbutton=0,
+                          message_text=msg)
+    x = max(1, x - (w.winfo_width() / 2) - 10)
+    y = max(1, y - (w.winfo_height() / 2) - 10)
+    choice = w.activate(geometry='+%d+%d' % (x,y)) == "Yes"
+    return choice
+    
 def choose(master, mesg, options):
     """
     Simple warning message dialog box

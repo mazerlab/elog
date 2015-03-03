@@ -27,7 +27,7 @@ from keyboard import keyboard
 
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
-    from tkMessageBox import askyesno
+    #from tkMessageBox import askyesno
     import PmwBundle as Pmw
     import tkdialogs
 
@@ -1562,7 +1562,7 @@ def start():
     Database().readonly = readonly
 
     require_tk(tk)
-
+    
     logwin = GuiWindow(tk, Database(), animal=animal)
 
     if date:
@@ -1587,8 +1587,9 @@ def start():
                 sys.stderr.write('elog: -animal required with -new\n')
                 sys.exit(1)
             else:
+                tk.deiconify()
                 if not force_yes and \
-                       not askyesno('elog',
+                       not askyesno(tk, 'elog',
                                     "Create new entry: '%s' on %s%s?" % \
                                     (animal, date, dow)):
                     sys.exit(0)
