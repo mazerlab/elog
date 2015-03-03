@@ -319,6 +319,10 @@ def askyesno(master, title, msg, icon_bitmap='warning'):
     Simple yes/no dialog box under mouse
     """
     x, y = master.winfo_pointerxy()   # -1 if off screen
+    vis = master.winfo_viewable()
+    if not vis:
+        master.deiconify()
+    
     w = Pmw.MessageDialog(master,
                           iconpos='w',
                           icon_bitmap=icon_bitmap,
@@ -329,6 +333,9 @@ def askyesno(master, title, msg, icon_bitmap='warning'):
     x = max(1, x - (w.winfo_width() / 2) - 10)
     y = max(1, y - (w.winfo_height() / 2) - 10)
     choice = w.activate(geometry='+%d+%d' % (x,y)) == "Yes"
+    if not vis:
+        master.withdraw()
+    
     return choice
     
 def choose(master, mesg, options):

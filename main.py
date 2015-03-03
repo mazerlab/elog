@@ -1587,6 +1587,7 @@ def start():
                 sys.stderr.write('elog: -animal required with -new\n')
                 sys.exit(1)
             else:
+                print tk.winfo_viewable()
                 tk.deiconify()
                 if not force_yes and \
                        not askyesno(tk, 'elog',
