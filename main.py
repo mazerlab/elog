@@ -1182,7 +1182,10 @@ class GuiWindow(Frame):
                 # dtb/dtb_ml are clip to a minimum of 10 ml/kg
                 # xdtb/xdtb_ml are clipped to a 0 ml/kg
                 dt = np.array([r['water_work'] for r in rows]) / wt
-                xdtb = max(0, np.mean(dt) - 2.0 * np.std(dt))
+                if len(dt):
+                    xdtb = max(0, np.mean(dt) - 2.0 * np.std(dt))
+                else:
+                    xdtb = 0.0
                 dtb = max(MINDTB, xdtb)
                 self.session.rv.setval('xdtb', round(xdtb,1))
                 self.session.rv.setval('dtb', round(dtb,1))
