@@ -27,13 +27,14 @@ from keyboard import keyboard
 
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
-    #from tkMessageBox import askyesno
     import PmwBundle as Pmw
     import tkdialogs
 
 from tools import *
 import dumphtml
 import layout
+
+from elogapi import getdb
 
 READ_ONLY = False
 MINDTB = 10.0
@@ -42,7 +43,7 @@ logwin = None
 def ins_attachment(event, w):
     """Insert current timestamp into text widget.
     """
-    id = attach(w, w.db, im=None, title='',
+    id = attach(w, im=None, title='',
                 srctable='in-text', srcID=0)
     txt = event.widget
     tag = '<elog:attach=%d>' % id
@@ -53,19 +54,21 @@ def ins_attachment(event, w):
     txt.mark_unset('tmp')
 
     b = Button(txt)
-    b.im = pil_getattach(w.db, id, (128,128))
+    b.im = pil_getattach(id, (128,128))
     b.config(image=b.im,
-             command=lambda m=w,db=w.db,id=id: \
-             AttachmentViewer(m,db,id))
+             command=lambda m=w,id=id: \
+             AttachmentViewer(m,id))
     createToolTip(b, 'attachment #%d' % id)
     txt.window_create(INSERT, window=b, padx=10)
     
 
-def attach(tk, db, im=None, title='no title', note='',
+def attach(tk, im=None, title='no title', note='',
            srctable=None, srcID=None):
     """Use imagemagick 'import' command to grab a screen capture
     of a window or region as JPEG image and store in string
     """
+
+    db = getdb()
 
     if im is None:
         im = os.popen('import jpeg:-', 'r').read().encode('base64')
@@ -81,7 +84,7 @@ def attach(tk, db, im=None, title='no title', note='',
                     """ ORDER BY attachmentID DESC LIMIT 1""")
     id = rows[0]['attachmentID']
     if tk:
-        w = AttachmentViewer(tk, db, id, title=title)
+        w = AttachmentViewer(tk, id, title=title)
     return id
 
 def isdel(date, exper):
@@ -117,10 +120,12 @@ def tag_select(parent):
     else:
         return None
 
-def pil_getattach(db, id, size=None):
+def pil_getattach(id, size=None):
     import PIL.Image
     import StringIO
     import PIL.ImageTk
+
+    db = getdb()
 
     rows = db.query("""SELECT * FROM attachment"""
                     """ WHERE attachmentID=%d""" % (id,))
@@ -136,8 +141,7 @@ def pil_getattach(db, id, size=None):
 class AttachmentViewer(Toplevel):
     attachmentList = {}
 
-    def __init__(self, master, db, id, title=None, note=None, **kw):
-        self.db = db
+    def __init__(self, master, id, title=None, note=None, **kw):
         self.id = id
 
         self.im, self.rows = self.getattach()
@@ -160,7 +164,7 @@ class AttachmentViewer(Toplevel):
         Button(bb, text='delete', \
                command=self.db_delete).pack(side=LEFT, expand=0)
 
-        self.rv = RecordView(f, layout.ATTACHMENT_FIELDS, self.db, False)
+        self.rv = RecordView(f, layout.ATTACHMENT_FIELDS, False)
         self.rv.pack(side=TOP, expand=1, fill=BOTH)
         self.rv.setall(self.rows)
 
@@ -175,9 +179,10 @@ class AttachmentViewer(Toplevel):
         import PIL.Image
         import StringIO
         import PIL.ImageTk
+        db = getdb()
 
-        rows = self.db.query("""SELECT * FROM attachment"""
-                             """ WHERE attachmentID=%d""" % (self.id,))
+        rows = db.query("""SELECT * FROM attachment"""
+                        """ WHERE attachmentID=%d""" % (self.id,))
         imstr = rows[0]['data'].decode('base64')
         im = PIL.ImageTk.PhotoImage(PIL.Image.open(StringIO.StringIO(imstr)))
         return im, rows[0]
@@ -193,8 +198,9 @@ class AttachmentViewer(Toplevel):
             return
 
         # delete actual attachment
-        self.db.query("""DELETE FROM attachment WHERE attachmentID=%d""" %
-                      (self.id,))
+        db = getdb()
+        db.query("""DELETE FROM attachment WHERE attachmentID=%d""" %
+                 (self.id,))
 
         # note: notes that actually refer to the attachement will be
         # deleted the next time they are displayed..
@@ -202,7 +208,7 @@ class AttachmentViewer(Toplevel):
         self.destroy()
 
     def save(self):
-        self.rv.save(self.db, table='attachment',
+        self.rv.save(table='attachment',
                      key=('AttachmentID', self.id))
 
     def close(self):
@@ -217,9 +223,10 @@ def clipcopy(widget, str):
     widget.clipboard_clear()
     widget.clipboard_append(str)
 
-# left-right hack from:
-#  http://mail.python.org/pipermail/tkinter-discuss/2011-January/002752.html
 class Checkbutton2(Frame):
+    """Modified checkbutton widget idea from:
+    http://mail.python.org/pipermail/tkinter-discuss/2011-January/002752.html
+    """
     def __init__(self, master=None, **kw):
 
         if kw.has_key('text'):
@@ -254,7 +261,7 @@ class Checkbutton2(Frame):
         return v
 
 class RecordView(Frame):
-    def __init__(self, master, fields, db, allowattach, **kwargs):
+    def __init__(self, master, fields, allowattach, **kwargs):
         import types
 
         Frame.__init__(self, master, **kwargs)
@@ -264,7 +271,6 @@ class RecordView(Frame):
         self._converters = {}
         self._children = []
         self._children_info = {}
-        self.db = db
 
         self.frame1 = Frame(self)
         self.frame1.pack(expand=0, fill=X, side=TOP)
@@ -393,7 +399,7 @@ class RecordView(Frame):
 
                         (date, exper) = unlink_exper(txt.get(begin, end))
                         if (GuiWindow.showdel.get() or not isdel(date, exper)):
-                            ew = ExperWindow(txt, self.db, name='%s' % exper,
+                            ew = ExperWindow(txt, name='%s' % exper,
                                              relief=RIDGE, borderwidth=2)
                             ew.fill(exper=exper, date=date)
                             txt.window_create(end, window=ew, padx=10)
@@ -412,7 +418,7 @@ class RecordView(Frame):
                         end = end+'+1c'
                         txt.tag_add('attachlink', begin, end)
                         id = int(txt.get(begin, end)[1:-1].split('=')[1])
-                        im = pil_getattach(self.db, id, (128,128))
+                        im = pil_getattach(id, (128,128))
                         if im is None:
                             # attachement deleted -- go ahead and delete link
                             txt.delete(begin,end)
@@ -420,8 +426,8 @@ class RecordView(Frame):
                             b = Button(txt)
                             b.im = im
                             b.config(image=b.im,
-                                     command=lambda m=self,db=self.db,id=id: \
-                                     AttachmentViewer(m,db,id))
+                                     command=lambda m=self,id=id: \
+                                     AttachmentViewer(m,id))
                             createToolTip(b, 'attachment #%d' % id)
                             txt.window_create(end, window=b, padx=10)
                         begin = end
@@ -459,12 +465,15 @@ class RecordView(Frame):
             d[k] = self.getval(k)
         return d
 
-    def save(self, db, table, key=(None,None)):
+    def save(self, table, key=(None,None)):
         """Save current on-screen record to specified database table.
         """
         if READ_ONLY:
+            warn(self, "\nRead only mode!\n", ("Ok",))
             return
 
+        db = getdb()
+        
         # for session records only, check to make sure nobody's been
         # messing with the record while you have it open..
         if (table is 'session') and (not key[0] is None):
@@ -524,13 +533,12 @@ class RecordView(Frame):
         Msg("Saved record.")
 
 class DatafileFrame(Frame):
-     def __init__(self, master, db, src, **kwargs):
+     def __init__(self, master, src, **kwargs):
         Frame.__init__(self, master, **kwargs)
 
-        self.db = db
-
-        rows = self.db.query("""SELECT * FROM dfile WHERE src='%s'""" %
-                             (src,))
+        db = getdb()
+        rows = db.query("""SELECT * FROM dfile WHERE src='%s'""" %
+                        (src,))
 
         tag = '%s/%s' % (rows[0]['date'], os.path.basename(src))
         link = "<elog:dfile=%s>" % (tag,)
@@ -538,7 +546,7 @@ class DatafileFrame(Frame):
         f = Frame(self)
         f.pack(expand=1, fill=X)
 
-        self.rv = RecordView(self, layout.DFILE_FIELDS, db, True)
+        self.rv = RecordView(self, layout.DFILE_FIELDS, True)
         self.rv.pack(expand=1, fill=BOTH)
         self.rv.setall(rows[0])
         self.dfileID = rows[0]['dfileID']
@@ -554,12 +562,11 @@ class DatafileFrame(Frame):
         b.pack(side=LEFT)
 
      def save(self):
-         self.rv.save(self.db, table='dfile',
+         self.rv.save(table='dfile',
                       key=('dfileID', self.dfileID))
 
 class UnitWindow:
-    def __init__(self, db, exper, unit):
-        self.db = db
+    def __init__(self, exper, unit):
         self.exper = exper
         self.unit = unit
 
@@ -569,15 +576,16 @@ class UnitWindow:
         b.pack(side=TOP, anchor=W)
         createToolTip(b, 'delete unit from database forever!')
 
-        self.rv = RecordView(page, layout.UNIT_FIELDS, db, True)
+        self.rv = RecordView(page, layout.UNIT_FIELDS, True)
         self.rv.pack(side=TOP, expand=1, fill=BOTH)
 
         d = self.exper.rv.getall()
-
-        rows = self.db.query("""SELECT * FROM unit"""
-                             """ WHERE animal='%s' AND date='%s' AND"""
-                             """ exper='%s' AND unit='%s'""" %
-                             (d['animal'], d['date'], d['exper'], unit))
+        db = getdb()
+        
+        rows = db.query("""SELECT * FROM unit"""
+                        """ WHERE animal='%s' AND date='%s' AND"""
+                        """ exper='%s' AND unit='%s'""" %
+                        (d['animal'], d['date'], d['exper'], unit))
         if len(rows):
             self.rv.setall(rows[0])
         else:
@@ -588,10 +596,10 @@ class UnitWindow:
             # this is bad thing (ncorrect etc), so the values are
             # overridden below to resonable starting values
 
-            rows = self.db.query("""SELECT * FROM unit"""
-                                 """ WHERE animal='%s'"""
-                                 """ ORDER BY date DESC LIMIT 1""" %
-                                 (d['animal'],))
+            rows = db.query("""SELECT * FROM unit"""
+                            """ WHERE animal='%s'"""
+                            """ ORDER BY date DESC LIMIT 1""" %
+                            (d['animal'],))
             if len(rows):
                 well = rows[0]['well']
             else:
@@ -632,31 +640,32 @@ class UnitWindow:
                 self.exper.unitbook.destroy()
                 self.exper.unitbook = None
 
+            db = getdb()
             # delete from database -- don't do this the other way around..
-            self.db.query("""DELETE FROM unit"""
-                          """ WHERE animal='%s' AND date='%s' AND"""
-                          """ exper='%s' AND unit='%s'""" %
-                          (d['animal'], d['date'], d['exper'], self.unit,))
+            db.query("""DELETE FROM unit"""
+                     """ WHERE animal='%s' AND date='%s' AND"""
+                     """ exper='%s' AND unit='%s'""" %
+                     (d['animal'], d['date'], d['exper'], self.unit,))
 
     def save(self):
         """Save unit data to SQL database
         """
         d = self.rv.getall()
-        rows = self.db.query("""SELECT * FROM unit"""
-                             """ WHERE animal='%s' AND date='%s' AND"""
-                             """ exper='%s' AND unit='%s'""" %
-                             (d['animal'], d['date'], d['exper'], d['unit'],))
+        db = getdb()
+        rows = db.query("""SELECT * FROM unit"""
+                        """ WHERE animal='%s' AND date='%s' AND"""
+                        """ exper='%s' AND unit='%s'""" %
+                        (d['animal'], d['date'], d['exper'], d['unit'],))
         if len(rows) == 0:
-            self.rv.save(self.db, table='unit')
+            self.rv.save(table='unit')
         else:
-            self.rv.save(self.db, table='unit',
+            self.rv.save(table='unit',
                          key=('unitID', rows[0]['unitID']))
 
 class ExperWindow(Frame):
-    def __init__(self, master, db, name=None, **kwargs):
+    def __init__(self, master, name=None, **kwargs):
         Frame.__init__(self, master, **kwargs)
 
-        self.db = db
         self.date = None
         self.exper = None
 
@@ -681,7 +690,7 @@ class ExperWindow(Frame):
         createToolTip(b, 'create new unit (TTL etc)')
         b.pack(side=LEFT)
 
-        self.rv = RecordView(self, layout.EXPER_FIELDS, db, True)
+        self.rv = RecordView(self, layout.EXPER_FIELDS, True)
         self.rv.grid(row=1, column=0, sticky=E+W)
 
         self.unitbook = None
@@ -689,31 +698,32 @@ class ExperWindow(Frame):
 
     def tag(self, add=1):
         d = self.rv.getall()
+        db = getdb()
         if add:
             newtag = tag_select(self)
             if not newtag is None:
-                rows = self.db.query("""SELECT tags,experID FROM exper"""
-                                     """ WHERE exper='%(exper)s'"""
-                                     """ AND date='%(date)s'""" % d)
+                rows = db.query("""SELECT tags,experID FROM exper"""
+                                """ WHERE exper='%(exper)s'"""
+                                """ AND date='%(date)s'""" % d)
                 tags = rows[0]['tags']
                 if len(tags) > 0:
                     tags = rows[0]['tags'] + ',' + newtag
                 else:
                     tags = newtag
                 tags = ",".join(list(set(tags.split(','))))
-                self.db.query("""UPDATE exper SET tags='%s'"""
-                              """ WHERE experID=%d""" % (tags,
-                                                         rows[0]['experID']))
+                db.query("""UPDATE exper SET tags='%s'"""
+                         """ WHERE experID=%d""" % (tags,
+                                                    rows[0]['experID']))
         else:
-            rows = self.db.query("""SELECT tags,experID FROM exper"""
-                                 """ WHERE exper='%(exper)s'"""
-                                 """ AND date='%(date)s'""" % d)
+            rows = db.query("""SELECT tags,experID FROM exper"""
+                            """ WHERE exper='%(exper)s'"""
+                            """ AND date='%(date)s'""" % d)
             tags = ask(self, 'tags:', rows[0]['tags'])
             if not tags is None:
                 tags = ",".join(list(set(tags.split(','))))
-                self.db.query("""UPDATE exper SET tags='%s'"""
-                              """ WHERE experID=%d""" % (tags,
-                                                         rows[0]['experID']))
+                db.query("""UPDATE exper SET tags='%s'"""
+                         """ WHERE experID=%d""" % (tags,
+                                                    rows[0]['experID']))
 
     def getunitbook(self):
         """Get handle for unit-notebook, or else make one if it doesn't exist.
@@ -726,14 +736,15 @@ class ExperWindow(Frame):
         return self.unitbook
 
     def fill(self, dict=None, exper=None, date=None):
+        db = getdb()
         if dict:
             self.rv.setall(dict)
             self.date = dict['date']
             self.exper = dict['exper']
         elif exper and date:
-            rows = self.db.query("""SELECT * FROM exper"""
-                                 """ WHERE exper='%s' AND date='%s'""" %
-                                 (exper, date,))
+            rows = db.query("""SELECT * FROM exper"""
+                            """ WHERE exper='%s' AND date='%s'""" %
+                            (exper, date,))
             if len(rows) > 0:
                 if len(rows[0]['tags']) > 0:
                     createToolTip(self.tagb, 'tags: ' + rows[0]['tags'])
@@ -743,26 +754,27 @@ class ExperWindow(Frame):
                 self.date = date
                 self.exper = exper
 
-                rows = self.db.query("""SELECT * FROM unit"""
-                                     """ WHERE animal='%s' AND date='%s'"""
-                                     """ AND exper='%s'""" %
-                                     (rows[0]['animal'],
-                                      rows[0]['date'], rows[0]['exper'],))
+                rows = db.query("""SELECT * FROM unit"""
+                                """ WHERE animal='%s' AND date='%s'"""
+                                """ AND exper='%s'""" %
+                                (rows[0]['animal'],
+                                 rows[0]['date'], rows[0]['exper'],))
                 for row in rows:
-                    u = UnitWindow(self.db, self, row['unit'])
+                    u = UnitWindow(self, row['unit'])
                     self.unitlist.append(u)
 
 
         d = self.rv.getall()
 
         # get list of datafiles
-        rows = self.db.query("""SELECT src FROM dfile"""
-                             """ WHERE exper='%s' AND date='%s'"""
-                             """ ORDER BY dfileID""" % (exper, date,))
+        db = getdb()
+        rows = db.query("""SELECT src FROM dfile"""
+                        """ WHERE exper='%s' AND date='%s'"""
+                        """ ORDER BY dfileID""" % (exper, date,))
         nr = 3
         self.dfiles = []
         for row in rows:
-            w = DatafileFrame(self, self.db, row['src'], \
+            w = DatafileFrame(self, row['src'], \
                               borderwidth=2, relief=RIDGE)
             if GuiWindow.showdatafiles.get():
                 # only display if the not hidden:
@@ -775,6 +787,7 @@ class ExperWindow(Frame):
         Save exper to SQL database
         """
         d = self.rv.getall()
+        db = getdb()
 
         # first save all units
         for u in self.unitlist[:]:
@@ -785,45 +798,45 @@ class ExperWindow(Frame):
             df.save()
 
         # then save exper
-        rows = self.db.query("""SELECT experID,exper,date FROM exper"""
-                             """ WHERE exper='%s' and date='%s'""" %
-                             (d['exper'], d['date'],))
+        rows = db.query("""SELECT experID,exper,date FROM exper"""
+                        """ WHERE exper='%s' and date='%s'""" %
+                        (d['exper'], d['date'],))
         if len(rows) > 1:
             for n in range(len(rows)):
                 print rows[n]
             warn(self, 'database corruption: duplicate exper!')
         else:
             if len(rows) > 0:
-                self.rv.save(self.db, table='exper',
-                            key=('experID', rows[0]['experID']))
+                self.rv.save(table='exper',
+                             key=('experID', rows[0]['experID']))
             else:
-                self.rv.save(self.db, table='exper',
+                self.rv.save(table='exper',
                              key=('experID', None))
 
     def new_unit(self, unit=None):
         d = self.rv.getall()
+        db = getdb()
         if unit is None:
             unit = ask(self, 'new unit', 'TTL')
             if unit is None:
                 return
 
-        rows = self.db.query("""SELECT unitID FROM unit"""
-                             """ WHERE animal='%s' AND date='%s' AND"""
-                             """ exper='%s' AND unit='%s'""" %
-                             (d['animal'], d['date'], d['exper'], unit,))
+        rows = db.query("""SELECT unitID FROM unit"""
+                        """ WHERE animal='%s' AND date='%s' AND"""
+                        """ exper='%s' AND unit='%s'""" %
+                        (d['animal'], d['date'], d['exper'], unit,))
         if len(rows) > 0 or unit in self.getunitbook().pagenames():
             warn(self, 'no joy: %s already exists' % unit)
             return 0
         else:
-            self.unitlist.append(UnitWindow(self.db, self, unit))
+            self.unitlist.append(UnitWindow(self, unit))
             self.getunitbook().selectpage(unit)
 
 class SessionWindow(Frame):
-    def __init__(self, master, db, animal, **kwargs):
+    def __init__(self, master, animal, **kwargs):
         Frame.__init__(self, master, **kwargs)
         
         self.logwin = master
-        self.db = db
         self.animal = animal
         self.n = 0
 
@@ -836,13 +849,14 @@ class SessionWindow(Frame):
 
         Msg(window=self.status)
 
-        self.rv = RecordView(self, layout.SESSION_FIELDS, db, True)
+        self.rv = RecordView(self, layout.SESSION_FIELDS, True)
         self.rv.pack(side=BOTTOM, fill=BOTH, expand=1)
 
     def view(self, date=None):
-        rows = self.db.query("""SELECT sessionID, date FROM session"""
-                             """ WHERE animal='%s' ORDER BY date""" %
-                             (self.animal,))
+        db = getdb()
+        rows = db.query("""SELECT sessionID, date FROM session"""
+                        """ WHERE animal='%s' ORDER BY date""" %
+                        (self.animal,))
 
         if len(rows) == 0:
             return 0
@@ -861,25 +875,26 @@ class SessionWindow(Frame):
         nmax = len(rows) - 1
 
         self.n = max(0, min(self.n, nmax))
-        rows = self.db.query("""SELECT * FROM session"""
-                             """ WHERE sessionID=%d ORDER BY date""" %
-                             (rows[self.n]['sessionID'],))
+        rows = db.query("""SELECT * FROM session"""
+                        """ WHERE sessionID=%d ORDER BY date""" %
+                        (rows[self.n]['sessionID'],))
         row = rows[0]
         for k in self.rv.keys():
             self.rv.setval(k, row[k])
         s = '%d/%d recs' % (1+self.n, len(rows),)
 
         d = self.rv.getall()
-        rows = self.db.query("""SELECT exper FROM exper"""
-                             """ WHERE animal='%s' and date='%s'"""
-                             """ ORDER BY exper ASC""" %
-                             (d['animal'], d['date'],))
+        rows = db.query("""SELECT exper FROM exper"""
+                        """ WHERE animal='%s' and date='%s'"""
+                        """ ORDER BY exper ASC""" %
+                        (d['animal'], d['date'],))
 
         dstr = time.strftime('%a %Y-%m-%d',
                              time.strptime(d['date'], '%Y-%m-%d'))
 
+        db = getdb()
         GuiWindow.root.winfo_toplevel().title("db:%s `%s` %s" %
-                                              (self.db.db, d['animal'], dstr))
+                                              (db.db, d['animal'], dstr))
 
         # cache pointer to last record accessed in homedir for next time
         saveConfig(self)
@@ -891,7 +906,8 @@ class SessionWindow(Frame):
 
     def save(self):
         d = self.rv.getall()
-
+        db = getdb()
+        
         animal = self.rv.getval('animal')
         date = self.rv.getval('date')
         if len(animal) == 0:
@@ -901,9 +917,9 @@ class SessionWindow(Frame):
             warn(self, "Please specify date to save.")
             return 0
 
-        rows = self.db.query("""SELECT sessionID FROM session"""
-                             """ WHERE animal='%s' and date='%s'""" %
-                             (d['animal'], d['date'],))
+        rows = db.query("""SELECT sessionID FROM session"""
+                        """ WHERE animal='%s' and date='%s'""" %
+                        (d['animal'], d['date'],))
         n = len(rows)
 
         if n > 1:
@@ -912,11 +928,11 @@ class SessionWindow(Frame):
         elif n == 1:
             # update existing session
             sessionID = rows[0]['sessionID']
-            e = self.rv.save(self.db, table='session',
+            e = self.rv.save(table='session',
                              key=('sessionID', sessionID))
         else:
             # create entry for a brand new session
-            e = self.rv.save(self.db, table='session')
+            e = self.rv.save(table='session')
 
         Msg("Saved session.")
 
@@ -934,9 +950,11 @@ class SessionWindow(Frame):
         else:
             today = datetime.date(1,1,1).today()
 
-        rows = self.db.query("""SELECT * FROM session"""
-                             """ WHERE animal like '%s' and date='%s'""" %
-                             (animal, today,))
+        db = getdb()
+
+        rows = db.query("""SELECT * FROM session"""
+                        """ WHERE animal like '%s' and date='%s'""" %
+                        (animal, today,))
         if len(rows) > 1:
             warn(self,
                  'Multiple matching records for today.\nTry picking an animal.')
@@ -986,12 +1004,13 @@ class SessionWindow(Frame):
 
     def find_byexper(self):
         d = self.rv.getall()
+        db = getdb()
         s = ask(self, 'find exper/cell id (%s only)' % d['animal'], '')
         if s:
             # only look in current animal..
-            rows = self.db.query("""SELECT date FROM dfile """
-                                 """ WHERE exper='%s' and animal='%s'""" %
-                                 (s, d['animal']))
+            rows = db.query("""SELECT date FROM dfile """
+                            """ WHERE exper='%s' and animal='%s'""" %
+                            (s, d['animal']))
             if len(rows) == 0:
                 warn(self, "Can\'t find exper: %s" % s)
             else:
@@ -1004,14 +1023,15 @@ class SessionWindow(Frame):
         missing exper-hyperlinks (inaccessible expers..)
         """
         d = self.rv.getall()
+        db = getdb()
         animal = d['animal']
         date = d['date']
 
         missing = 0
         # find all exper's that don't have a hyperlink in a note field
-        rows = self.db.query("""SELECT exper,date FROM exper"""
-                             """ WHERE animal='%s' and date='%s'""" %
-                             (animal, date,))
+        rows = db.query("""SELECT exper,date FROM exper"""
+                        """ WHERE animal='%s' and date='%s'""" %
+                        (animal, date,))
         for row in rows:
             if int(row['exper'][-4:]) > 0:
                 link = "<elog:exper=%s/%s>" % (row['date'], row['exper'])
@@ -1027,10 +1047,9 @@ class SessionWindow(Frame):
 
 class GuiWindow(Frame):
     root = None
-    def __init__(self, master, db, animal='%', ro=False, **kwargs):
+    def __init__(self, master, animal='%', ro=False, **kwargs):
 
         self.animal = animal
-        self.db = db
 
         GuiWindow.root = master
 
@@ -1040,8 +1059,6 @@ class GuiWindow(Frame):
                            hotkeys=False)
 
         menu.addmenu('File', '', '')
-        menu.addmenuitem('File', 'command', label='force DB reconnect',
-                         command=self.reconnect)
         menu.addmenuitem('File', 'command', label='Save (Ctrl-S)',
                          command=self.save)
         menu.addmenuitem('File', 'command', label='Exit w/out save',
@@ -1086,7 +1103,7 @@ class GuiWindow(Frame):
                          """click in window to attach."""))
 
         menu.addmenu('Animals', '', '')
-        for a in find_animals(db):
+        for a in find_animals(getdb()):
             menu.addmenuitem('Animals', 'command', label=a,
                              command=lambda s=self,a=a,tk=master: \
                              s.selanimal(tk,a))
@@ -1145,9 +1162,6 @@ class GuiWindow(Frame):
         self.session = None
         self.jump(1e6)
 
-    def reconnect(self):
-        self.db.connect()
-
     def selanimal(self, tk, animal):
         if self.session:
             self.session.save()
@@ -1160,19 +1174,20 @@ class GuiWindow(Frame):
         self.jump(0)
 
     def jump(self, n, save=1):
+        db = getdb()
         if self.session:
             n = self.session.n + n
             # update dtb.. get last 7 testing dayes
             animal = self.session.rv.getval('animal')
             date = self.session.rv.getval('date')
             kg = self.session.rv.getval('weight')
-            rows = self.db.query("""SELECT date,water_work,weight FROM """\
-                                 """ session WHERE""" \
-                                 """ animal='%s' and date<'%s' and""" \
-                                 """ water_work > 0 and"""\
-                                 """ restricted=1 and tested=1 ORDER""" \
-                                 """ BY date DESC LIMIT 7""" % \
-                                 (self.animal, date,))
+            rows = db.query("""SELECT date,water_work,weight FROM """\
+                            """ session WHERE""" \
+                            """ animal='%s' and date<'%s' and""" \
+                            """ water_work > 0 and"""\
+                            """ restricted=1 and tested=1 ORDER""" \
+                            """ BY date DESC LIMIT 7""" % \
+                            (self.animal, date,))
             wt = np.array([r['weight'] for r in rows])
             try:
                 # dtb is (mean-2sigma) working intake ml/kg for last 7 days
@@ -1212,27 +1227,27 @@ class GuiWindow(Frame):
                 self.session.save()
             self.session.destroy()
 
-        self.session = SessionWindow(self, self.db, self.animal)
+        self.session = SessionWindow(self, self.animal)
         self.session.pack(expand=1, fill=BOTH, anchor=N)
         self.session.n = n
         self.session.view()
 
     def exists(self, animal, date):
-        rows = self.db.query("""SELECT sessionID, date FROM session"""
-                             """ WHERE animal='%s' AND date='%s'"""
-                             """ ORDER BY date""" %
-                             (animal, date,))
+        db = getdb()
+        rows = db.query("""SELECT sessionID, date FROM session"""
+                        """ WHERE animal='%s' AND date='%s'"""
+                        """ ORDER BY date""" %
+                        (animal, date,))
         return len(rows) > 0
 
     def quit(self):
         saveConfig(self.session)
         self.save()
-        self.db.close()
         self.destroy()
 
     def save(self):
         if READ_ONLY:
-            Msg("READ ONLY!")
+            warn(self, "\nRead only mode!\n", ("Ok",))
         else:
             self.session.save()
             Msg("Saved.")
@@ -1242,10 +1257,11 @@ class GuiWindow(Frame):
         self.session.view(date=date)
 
     def next_exper(self):
-        rows = self.db.query("""SELECT exper FROM exper"""
-                             """ WHERE animal like '%s'"""
-                             """ ORDER BY exper DESC LIMIT 1""" %
-                             (self.animal,))
+        db = getdb()
+        rows = db.query("""SELECT exper FROM exper"""
+                        """ WHERE animal like '%s'"""
+                        """ ORDER BY exper DESC LIMIT 1""" %
+                        (self.animal,))
         pre = self.animal
         num = 0
         if len(rows) > 0:
@@ -1266,27 +1282,28 @@ class GuiWindow(Frame):
         self.session.save()
         d = self.session.rv.getall()
         date = self.session.rv.getval('date')
-
+        db = getdb()
+        
         # insert empty new exper in the database
-        self.db.query("""INSERT INTO exper (exper, animal, date, time)"""
-                      """ VALUES %s""" %
-                      ((exper, self.animal, date, time.strftime('%H%M-')),))
+        db.query("""INSERT INTO exper (exper, animal, date, time)"""
+                 """ VALUES %s""" %
+                 ((exper, self.animal, date, time.strftime('%H%M-')),))
 
         link = "\n<elog:exper=%s/%s>\n" % (d['date'], exper)
         note = d['note'] + link
 
-        rows = self.db.query("""SELECT sessionID FROM session"""
-                             """ WHERE animal='%s' and date='%s'""" %
-                             (d['animal'], d['date'],))
+        rows = db.query("""SELECT sessionID FROM session"""
+                        """ WHERE animal='%s' and date='%s'""" %
+                        (d['animal'], d['date'],))
         sessionID = rows[0]['sessionID']
 
         # following command is the problem!! REPLACE deletes row
         # first.. should be UPDATE instead.. record already should
         # exist!
-        self.db.query("""UPDATE session SET animal='%s', date='%s', note='%s'"""
-                      """ WHERE sessionID=%d""" %
-                       (d['animal'], d['date'],
-                        str(note).replace("'", "\\'"), sessionID),)
+        db.query("""UPDATE session SET animal='%s', date='%s', note='%s'"""
+                 """ WHERE sessionID=%d""" %
+                 (d['animal'], d['date'],
+                  str(note).replace("'", "\\'"), sessionID),)
 
         self.jump(0, save=0)
 
@@ -1350,8 +1367,8 @@ Datafile options:
     if exit:
         sys.exit(1)
 
-def animallist(db):
-    s = string.join(find_animals(db), ' ')
+def animallist():
+    s = string.join(find_animals(getdb()), ' ')
     if len(s) > 0:
         return s
     else:
@@ -1389,6 +1406,7 @@ def start():
     new = 0
     force_yes = 0
     last = 0
+    READ_ONLY = False
 
     try:
         tk = Tk()
@@ -1411,12 +1429,12 @@ def start():
         elif isarg(arg, '-rev'):
             rev = 1
         elif isarg(arg, '-r'):
-            READ_ONLY = 1
+            READ_ONLY = True
         elif isarg(arg, '-info'):
             info = 1
         elif isarg(arg, '-q'):
             require_tk(tk)
-            animal = tkdialogs.select(find_animals(Database()))
+            animal = tkdialogs.select(find_animals(getdb()))
             if animal is None:
                 sys.exit(0)
             require_tk(tk)
@@ -1427,7 +1445,7 @@ def start():
             animal = string.split(arg, '=')[1]
         elif isarg(arg, '-animal'):
             require_tk(tk)
-            animal = tkdialogs.select(find_animals(Database()))
+            animal = tkdialogs.select(find_animals(getdb()))
             if animal is None:
                 sys.exit(0)
         elif isarg(arg, '-a'):
@@ -1492,7 +1510,7 @@ def start():
             exper = arg
         elif re.match('^[0-9]...-[0-9].-[0-9].*$', arg):
             date = arg
-        elif arg in find_animals(Database()):
+        elif arg in find_animals(getdb()):
             animal = arg
         else:
             sys.stderr.write('elog: unknown arg -- %s\n' % arg)
@@ -1514,10 +1532,8 @@ def start():
     if not dump and date is None:
         date = _date
 
-    db = Database()
-
     if info:
-        sys.stdout.write(animallist(Database()))
+        sys.stdout.write(animallist())
         sys.stdout.write('\n')
         sys.exit(0)
 
@@ -1530,7 +1546,7 @@ def start():
         if animal is None:
             sys.exit(0)
 
-    alist = find_animals(Database())
+    alist = find_animals(getdb())
 
     if (animal not in alist):
         if animal == '':
@@ -1564,7 +1580,7 @@ def start():
 
     require_tk(tk)
     
-    logwin = GuiWindow(tk, Database(), animal=animal, ro=READ_ONLY)
+    logwin = GuiWindow(tk, animal=animal, ro=READ_ONLY)
 
     if date:
         dow = ''
@@ -1582,7 +1598,8 @@ def start():
 
         if not logwin.exists(animal=animal, date=date):
             if not force_yes:
-                sys.stderr.write('elog: animal=\'%s\' date=%s%s not in database.\n' % \
+                sys.stderr.write("""elog: animal=\'%s\' """
+                                 """date=%s%s not in database.\n""" % \
                                  (animal, date, dow))
             if animal is None:
                 sys.stderr.write('elog: -animal required with -new\n')
