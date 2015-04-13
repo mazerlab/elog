@@ -35,6 +35,7 @@ from tools import *
 import dumphtml
 import layout
 
+READ_ONLY = False
 MINDTB = 10.0
 logwin = None
 
@@ -182,7 +183,7 @@ class AttachmentViewer(Toplevel):
         return im, rows[0]
 
     def db_delete(self):
-        if self.db.readonly:
+        if READ_ONLY:
             warn(self, "\nRead only mode!\n", ("Ok",))
             return
 
@@ -461,7 +462,7 @@ class RecordView(Frame):
     def save(self, db, table, key=(None,None)):
         """Save current on-screen record to specified database table.
         """
-        if db.readonly:
+        if READ_ONLY:
             return
 
         # for session records only, check to make sure nobody's been
@@ -615,7 +616,7 @@ class UnitWindow:
         """Delete this unit from SQL database and delete from GUI.
         """
 
-        if self.db.readonly:
+        if READ_ONLY:
             warn(self, "\nRead only mode!\n", ("Ok",))
             return
 
@@ -1026,7 +1027,7 @@ class SessionWindow(Frame):
 
 class GuiWindow(Frame):
     root = None
-    def __init__(self, master, db, animal='%', **kwargs):
+    def __init__(self, master, db, animal='%', ro=False, **kwargs):
 
         self.animal = animal
         self.db = db
@@ -1095,7 +1096,7 @@ class GuiWindow(Frame):
         menuhull = Frame(menu.component('hull'))
         menuhull.pack(side=LEFT)
 
-        if db.readonly:
+        if ro:
             Label(menuhull, text='READ-ONLY',
                   fg='red', padx=10).pack(side=LEFT, expand=0)
 
@@ -1230,7 +1231,7 @@ class GuiWindow(Frame):
         self.destroy()
 
     def save(self):
-        if self.db.readonly:
+        if READ_ONLY:
             Msg("READ ONLY!")
         else:
             self.session.save()
@@ -1384,7 +1385,6 @@ def start():
     dfile = None
     files = []
     init = None                         # initialize fresh database
-    readonly = None
     info = None
     new = 0
     force_yes = 0
@@ -1411,7 +1411,7 @@ def start():
         elif isarg(arg, '-rev'):
             rev = 1
         elif isarg(arg, '-r'):
-            readonly = 1
+            READ_ONLY = 1
         elif isarg(arg, '-info'):
             info = 1
         elif isarg(arg, '-q'):
@@ -1562,11 +1562,9 @@ def start():
         Database().close()
         sys.exit(0)
 
-    Database().readonly = readonly
-
     require_tk(tk)
     
-    logwin = GuiWindow(tk, Database(), animal=animal)
+    logwin = GuiWindow(tk, Database(), animal=animal, ro=READ_ONLY)
 
     if date:
         dow = ''

@@ -6,8 +6,6 @@ import os
 import string
 import time
 import types
-import atexit
-
 
 import MySQLdb
 from Tkinter import *
@@ -123,22 +121,10 @@ def _env(var, default=None):
         return default
 
 class Database(object):
-    # Singleton object -- only one of these really exists!
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(Database, cls).__new__(cls)
-            cls._init = 1
-        else:
-            cls._init = 0
-        return cls._instance
-
-    def __init__(self, host=None, port=None, db=None, user=None, passwd=None):
+    def __init__(self, host=None, port=None, db=None,
+                 user=None, passwd=None, quiet=True):
         import dbsettings
         
-        if not Database._init: return
-
         if host is None:
             self.host = _env('ELOG_HOST', dbsettings.HOST)
         if port is None:
@@ -149,8 +135,13 @@ class Database(object):
             self.user = _env('ELOG_USER', dbsettings.USER)
         if passwd is None:
             self.passwd = _env('ELOG_PASS', dbsettings.PASS)
+            
+        self.quiet = quiet
 
         self.connect()
+
+    def __del__(self):
+        self.close()
 
     def connect(self):
         try:
@@ -160,7 +151,6 @@ class Database(object):
                                               passwd=self.passwd,
                                               db=self.db)
             self.cursor = self.connection.cursor()
-            atexit.register(self._atexit)
         except MySQLdb.OperationalError as (errno, errstr):
             sys.stderr.write("Can't connect to: '%s' %s@%s:%d\n" % \
                              (self.db, self.user, self.host, self.port,))
@@ -172,16 +162,6 @@ class Database(object):
         self.connection.commit()
 
     def close(self):
-        # Other instances may be floating around, so commit changes
-        # and leave real close for the atexit method below.
-        #
-        # By keeping close() method, this allows flushing queries out
-        # to the database, but ensures that the one live connection
-        # is maintained until the process exits. Best I can do..
-        self.flush()
-
-    def _atexit(self):
-        # this should only be called "atexit"
         if self.connection:
             self.flush()
             self.connection.close()
@@ -190,6 +170,7 @@ class Database(object):
 
     def query(self, cmd, *args):
         try:
+            if not self.quiet: print 'cmd: <%s>' % cmd
             result = []
             self.cursor.execute(cmd, *args)
             fields = self.cursor.description
@@ -202,8 +183,10 @@ class Database(object):
                     else:
                         dict[fields[fnum][0]] = row[fnum]
                 result.append(dict)
+            if not self.quiet: print "ok."
             return result
         except MySQLdb.Error, e:
+            if not self.quiet: print 'q error'
             (number, msg) = e.args
             sys.stderr.write('SQL ERROR #%d: %s\nQUERY=<%s>\n' %
                              (number, msg, cmd))
