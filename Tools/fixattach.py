@@ -17,9 +17,9 @@ import HTML, elogapi
 if __name__ == '__main__':
     db = elogapi.getdb()
 
-    (ok, rows) = db.q("""SELECT dfileID, attachlist, note """
-                      """ FROM dfile """
-                      """ WHERE attachlist IS NOT NULL""")
+    rows = db.query("""SELECT dfileID, attachlist, note """
+                    """ FROM dfile """
+                    """ WHERE attachlist IS NOT NULL""")
      
     for r in rows:
         if len(r['attachlist']) > 0:
@@ -34,9 +34,9 @@ if __name__ == '__main__':
                     newnote = newnote + '<elog:attach=%d>\n' % (id,)
                     update = 1
             if update:
-                (ok,xxx) = db.q("""UPDATE dfile SET note="%s" """
-                                """ WHERE dfileID=%d""" % \
-                        (newnote, int(r['dfileID'],)))
-                if not ok:
+                xxx = db.query("""UPDATE dfile SET note="%s" """
+                               """ WHERE dfileID=%d""" % \
+                               (newnote, int(r['dfileID'],)))
+                if xxx is None:
                     sys.stderr.write('failed on dfileID=%s\n' % r['dfileID'])
                     sys.exit(1)
