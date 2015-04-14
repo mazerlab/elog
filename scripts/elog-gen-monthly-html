@@ -57,16 +57,15 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         date0 = '%s-01' % (sys.argv[1],)
     else:
-        (ok, now) = db.q("""SELECT NOW()""", one=True)
-        now = now[0]
+        now = db.query("""SELECT NOW()""")[0]
         date0 = now.strftime('%Y-%m-01')
         
     # only do this for animals restricted during the specified month
-    (ok, rows) = db.q("""SELECT animal """
-                      """ FROM session WHERE """
-                      """ MONTH('%s') = MONTH(date) AND """
-                      """ YEAR('%s') = YEAR(date) AND """
-                      """ restricted > 0""" % (date0, date0,))
+    rows = db.query("""SELECT animal """
+                    """ FROM session WHERE """
+                    """ MONTH('%s') = MONTH(date) AND """
+                    """ YEAR('%s') = YEAR(date) AND """
+                    """ restricted > 0""" % (date0, date0,))
 
     animals = list(set([r['animal'] for r in rows]))
     animals.sort()
@@ -94,11 +93,11 @@ if __name__ == '__main__':
             else:
                 datestr = x
             tr = [datestr,]
-            (ok, rows) = db.q("""SELECT * """
-                              """ FROM session WHERE """
-                              """ date='%s' AND """
-                              """ animal LIKE "%s" """ % (date, animal))
-            if len(rows):
+            rows = db.query("""SELECT * """
+                            """ FROM session WHERE """
+                            """ date='%s' AND """
+                            """ animal LIKE "%s" """ % (date, animal))
+            if rows is not None and len(rows):
                 tr.append(ps('%s' % rows[0]['user']))
                 tr.append(ps('%s' % rows[0]['weight']))
                 tr.append(pyn(rows[0]['restricted']))
