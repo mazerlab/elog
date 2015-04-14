@@ -20,9 +20,9 @@ if len(sys.argv) > 1:
     target = target.replace('%', '.*')
     db = getdb()
     # use REGEXP instead of LIKE
-    (ok, rows) = db.q('SELECT src FROM dfile WHERE src REGEXP "%s"'
-                      ' AND NOT crap '
-                      ' ORDER BY date, right(src, 3)' % target)
+    rows = db.query('SELECT src FROM dfile WHERE src REGEXP "%s"'
+                    ' AND NOT crap '
+                    ' ORDER BY date, right(src, 3)' % target)
     dlist = {}
     for r in rows:
         if dir:
