@@ -2,6 +2,7 @@
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
 from tools import *
+from guitools import *
 
 # Fields here are:
 #   Name PmwType PythonValidationFn ReadOnly Width (row, col, colspan)

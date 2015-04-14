@@ -10,9 +10,9 @@ endif
 
 MODULES=*.py
 
-mlab: exe mlabscripts
-
 install: exe
+
+mlab: install mlabscripts
 
 exe: config
 	rm -rf $(INSTALLROOT)/lib/elog
@@ -28,10 +28,10 @@ exe: config
 # web-accessible dumps of the logs
 mlabscripts:
 	chmod +x scripts/*
-	cp scripts/* $(INSTALLROOT)/pypeextra
+	cp -a scripts/* $(INSTALLROOT)/pypeextra
 
 config:
-	cat sqlconfig.sh >dbsettings.py
+	sh sqlconfig.sh >dbsettings.py
 
 initdb:
 	sh ./dbmaker.sh

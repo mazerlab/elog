@@ -18,6 +18,7 @@
 import string
 import sys
 import os
+import types
 import datetime
 import time
 import re
@@ -31,6 +32,7 @@ if os.environ.has_key('DISPLAY'):
     import tkdialogs
 
 from tools import *
+from guitools import *
 import dumphtml
 import layout
 
@@ -262,8 +264,6 @@ class Checkbutton2(Frame):
 
 class RecordView(Frame):
     def __init__(self, master, fields, allowattach, **kwargs):
-        import types
-
         Frame.__init__(self, master, **kwargs)
 
         self._entries = {}
@@ -893,8 +893,9 @@ class SessionWindow(Frame):
                              time.strptime(d['date'], '%Y-%m-%d'))
 
         db = getdb()
-        GuiWindow.root.winfo_toplevel().title("db:%s `%s` %s" %
-                                              (db.db, d['animal'], dstr))
+        GuiWindow.root.winfo_toplevel().title("db:%s@%s `%s` %s" %
+                                              (db.db, db.host,
+                                               d['animal'], dstr))
 
         # cache pointer to last record accessed in homedir for next time
         saveConfig(self)

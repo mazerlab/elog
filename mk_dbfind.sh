@@ -1,2 +1,3 @@
 #!/bin/sh
-sed s/%SQLGLOBALS%/$(tr -d \\n < sqlconfig.sh)/g < dbfind.m
+sh sqlconfig.sh >/tmp/$$
+sed s/%SQLGLOBALS%/$(tr -d \\n < /tmp/$$)/g < dbfind.m

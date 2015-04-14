@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
-# external API/interface for elog functions (ie, for pype)
+# External API/interface for elog functions (ie, for pype). Provides:
+#
+#   getdb()
+#     - get database handle
+#   GetExper()
+#     - get latest exper
+#   GetNextExper(animal)
+#     - get next exper for specified animal
+#   AddDatafile(exper, animal, user, fname, filetype, date, crap, note, force)
+#     - insert specified file into database
+#
 
-import string
-import sys
-import os
-import datetime
-import time
 from tools import *
 
 def getdb(**kwargs):
@@ -31,7 +36,7 @@ def getdb(**kwargs):
 def GetExper(animal):
     """Query database for most recent exper (eg, flea0204, merc0182 etc).
     """
-    db = Database()
+    db = getdb()
     try:
         # get the last non-training exper for this animal from the database
         # by using LIKE for animal, this should handle prefixing correctly..
@@ -50,6 +55,15 @@ def GetExper(animal):
     else:
         return rows[0]['exper']
 
+def GetNextExper(animal):
+    e = GetExper(animal)
+    if e is None:
+        nextno = 1
+    else:
+        nextno = int(e[-4:]) + 1
+    return "%s%04d" % (animal, nextno)
+    
+
 def AddDatafile(exper, animal, user, fname, filetype,
                 date=None, crap=0, note='', force=0):
     """Insert DFILE record into database with the specified parameters.
@@ -58,7 +72,7 @@ def AddDatafile(exper, animal, user, fname, filetype,
     if date is None:
         date = today()
 
-    db = Database()
+    db = getdb()
     try:
         rows = db.query("""SELECT dfileID FROM dfile WHERE src='%s'""" %
                         fname)
