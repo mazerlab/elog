@@ -36,10 +36,10 @@ if __name__ == '__main__':
     threshy = []
     waterx = []
     watery = []
-    (ok, rows) = db.q("""SELECT * """
-                      """ FROM session WHERE animal LIKE "%s" """
-                      """ AND date > "%s" """
-                      """ ORDER BY date""" % (animal, startdate,))
+    rows = db.query("""SELECT * """
+                    """ FROM session WHERE animal LIKE "%s" """
+                    """ AND date > "%s" """
+                    """ ORDER BY date""" % (animal, startdate,))
     for r in rows:
         if not isinstance(r['date'], types.StringType):
             weightx.append(r['date'])
