@@ -1,35 +1,30 @@
 #!/usr/bin/env python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
-import elogapi
+from elogapi import getdb
 
 def check_exper_links(db):
     print "\nChecking for expers without hyperlinks (invisible expers)\n"
 
     # find all exper's that don't have a hyperlink in a note field
-    (ok, expers) = db.q("""
-    SELECT exper,animal,date FROM exper ORDER BY experID
-    """)
+    expers = db.query("""SELECT exper,animal,date FROM """
+                      """ exper ORDER BY experID""")
     for ex in expers:
         link = "<elog:exper=%s/%s>" % (ex['date'], ex['exper'])
         if int(ex['exper'][-4:]) > 0:
-            (ok, rows) = db.q("""
-            SELECT sessionID,animal FROM session \
-            WHERE (note LIKE '%%%s%%') and (date='%s')
-            """ % (link, ex['date'],))
+            rows = db.query("""SELECT sessionID,animal FROM session """
+                            """ WHERE (note LIKE '%%%s%%') AND """
+                            """ (date='%s')""" % (link, ex['date'],))
             if len(rows) == 0:
-                (ok, note) = db.q("""
-                SELECT note FROM exper WHERE exper='%s'  and date='%s'
-                """ % (ex['exper'], ex['date']))
-                
+                note = db.query("""SELECT note FROM exper """
+                                """ WHERE exper='%s' AND date='%s'""" %
+                                (ex['exper'], ex['date']))
                 print 'missing exper link: %s' % (link,)
 
 def find_duplicate_expers1(db):
     print "\nChecking for duplicate exper (not necessarily a problem)\n"
 
-    (ok, rows) = db.q("""
-    SELECT experID,exper FROM exper ORDER BY experID
-    """)
+    rows = db.query("""SELECT experID,exper FROM exper ORDER BY experID""")
 
     dups = {}
 
@@ -38,9 +33,9 @@ def find_duplicate_expers1(db):
             # ignore 0000 expers
             continue
         else:
-            (ok, rows2) = db.q("""
-            SELECT experID,date,exper FROM exper WHERE exper='%s'
-            """ % (row['exper'],))
+            rows2 = db.query("""SELECT experID,date,exper FROM """
+                             """ exper WHERE exper='%s'""" %
+                             (row['exper'],))
             if len(rows2) > 1 and not dups.has_key(row['exper']):
                 for n in range(len(rows2)):
                     print '%s%s/%s experID=%d (OK)' % \
@@ -51,9 +46,7 @@ def find_duplicate_expers1(db):
 def find_duplicate_expers2(db):
     print "\nChecking for duplicate expers on same date\n"
 
-    (ok, rows) = db.q("""
-    SELECT exper,date FROM exper ORDER BY experID
-    """)
+    rows = db.query("""SELECT exper,date FROM exper ORDER BY experID""")
 
     dups = {}
 
@@ -62,9 +55,9 @@ def find_duplicate_expers2(db):
             # ignore 0000 expers
             continue
         else:
-            (ok, rows2) = db.q("""
-            SELECT experID FROM exper WHERE exper='%s' AND date='%s'
-            """ % (row['exper'], row['date']))
+            rows2 = db.query("""SELECT experID FROM exper WHERE """
+                             """  exper='%s' AND date='%s' """ %
+                             (row['exper'], row['date']))
             if len(rows2) > 1 and not dups.has_key(row['exper']):
                 for n in range(len(rows2)):
                     print '%s%s/%s experID=%d (FATAL!)' % \
@@ -74,7 +67,7 @@ def find_duplicate_expers2(db):
                 dups[row['exper']] = 1
 
 if __name__ == '__main__':
-    db = elogapi.getdb()
+    db = getdb()
     check_exper_links(db)
     find_duplicate_expers1(db)
     find_duplicate_expers2(db)
