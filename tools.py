@@ -119,7 +119,8 @@ class Database(object):
 
     def query(self, cmd, *args):
         try:
-            if not self.quiet: print 'cmd: <%s>' % cmd
+            if not self.quiet:
+                sys.stderr.write('cmd: <%s>\n' % cmd)
             result = []
             self.cursor.execute(cmd, *args)
             fields = self.cursor.description
@@ -132,49 +133,12 @@ class Database(object):
                     else:
                         dict[fields[fnum][0]] = row[fnum]
                 result.append(dict)
-            if not self.quiet: print "ok."
             return result
         except MySQLdb.Error, e:
-            if not self.quiet: print 'q error'
             (number, msg) = e.args
-            sys.stderr.write('SQL ERROR #%d: %s\nQUERY=<%s>\n' %
+            sys.stderr.write('SQL ERROR #%d: <%s>\nQUERY=<%s>\n' %
                              (number, msg, cmd))
             return None
-
-    def q(self, cmd, one=False):
-        """simple database query -- returns results as dictionary
-
-        one: if true, select only first row of results..
-        
-        """
-        def row2dict(descr, row):
-            """
-            Convert a SQL query result-row into a dictionary.
-            """
-            dict = {}
-            for k in range(len(descr)):
-                if row[k] is None:
-                    dict[descr[k][0]] = ''
-                else:
-                    dict[descr[k][0]] = row[k]
-            return dict
-        
-        try:
-            self.cursor.execute(cmd)
-            descr = self.cursor.description
-            if not one:
-                rows = self.cursor.fetchall()
-                dicts = []
-                for row in rows:
-                    dicts.append(row2dict(descr, row))
-                return (1, dicts)
-            else:
-                row = self.cursor.fetchone()
-                return (1, row)
-        except MySQLdb.Error, e:
-            (number, msg) = e.args
-            return (None, e)
-                
 
 def isarg(arg, option):
     if arg[0:len(option)] == option:
