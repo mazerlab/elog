@@ -286,6 +286,9 @@ def emit_attachment(outdir, db, id):
     rows = db.query("""
     SELECT * FROM attachment WHERE attachmentID=%s
     """ % (id,))
+    if len(rows) == 0:
+        sys.stderr.write('bad attachlink: %s\n' % id)
+        return 'BAD ATTACHLINK: %s' % id
     row = rows[0]
 
     img = row['data'].decode('base64')
