@@ -58,7 +58,9 @@ if __name__ == '__main__':
 
     animals = list(set([r['animal'] for r in rows]))
     animals.sort()
-
+    if 'tester' in animals:
+        animals.remove('tester')
+    
     d = {}
     t = []
     for date in dates:
