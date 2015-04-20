@@ -1330,8 +1330,13 @@ def readConfig(session):
     import ConfigParser
 
     c = ConfigParser.ConfigParser()
-    with open(_configFile(), 'r') as f:
-        c.readfp(f)
+    try:
+        with open(_configFile(), 'r') as f:
+            c.readfp(f)
+    except IOError:
+        c.add_section('elog')
+        c.set('elog', 'animal', '')
+        c.set('elog', 'date', '')
     return c
             
 #############################################################3
@@ -1517,16 +1522,9 @@ def start():
             sys.stderr.write('elog: unknown arg -- %s\n' % arg)
             sys.exit(1)
 
-    try:
-        cfg = readConfig(None)
-        _animal = cfg.get('elog', 'animal')
-        _date = cfg.get('elog', 'date')
-    except:
-        # for backward compatibility
-        cfg = None
-        (_animal, _date) = old_cachestate()
-        if _animal is not None:
-            sys.stderr.write('elog: warning -- updating .elogrc\n')
+    cfg = readConfig(None)
+    _animal = cfg.get('elog', 'animal')
+    _date = cfg.get('elog', 'date')
 
     if not dump and animal is None:
         animal = _animal
