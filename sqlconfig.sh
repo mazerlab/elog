@@ -7,6 +7,7 @@ USER='mlab';
 PASS='mlab';
 DB='mlabdata';
 PORT='3306';
+DIR='$1';
 EOF
 else
     cat <<EOF
@@ -15,6 +16,7 @@ USER='root';
 PASS='';
 DB='mlabdata';
 PORT='3306';
+DIR='$1';
 EOF
 fi
 

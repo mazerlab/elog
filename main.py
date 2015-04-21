@@ -1430,7 +1430,11 @@ def start():
         if arg[0:2] == '--':
             arg = arg[1:]
             
-        if isarg(arg, '-y'):
+        if isarg(arg, '-dir'):
+            import dbsettings
+            sys.stdout.write('%s\n' % dbsettings.DIR)
+            sys.exit(0)
+        elif isarg(arg, '-y'):
             force_yes = 1
         elif isarg(arg, '-rev'):
             rev = 1

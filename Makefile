@@ -31,7 +31,8 @@ mlabscripts:
 	cp -a scripts/* $(INSTALLROOT)/pypeextra
 
 config:
-	sh sqlconfig.sh >dbsettings.py
+	echo idir=$(INSTALLROOT)
+	sh sqlconfig.sh $(INSTALLROOT) >dbsettings.py
 
 initdb:
 	sh ./dbmaker.sh
