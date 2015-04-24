@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# insert specified image (along with title and note) into elog
+# database as an attachment
+#
+
+if [ $# -ne 2 ]; then
+  echo "usage: $(basename $0) imagefile title"
+  exit 0 
+fi
+
+echo "SRC:$1" >/tmp/$$
+${EDITOR} /tmp/$$
+cat /tmp/$$ | attachim.py "$1" "$2"
+rm -f /tmp/$$

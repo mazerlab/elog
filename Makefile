@@ -12,7 +12,7 @@ MODULES=*.py
 
 install: exe
 
-mlab: install mlabscripts
+mlab: install mlabscripts tools
 
 exe: config
 	rm -rf $(INSTALLROOT)/lib/elog
@@ -29,6 +29,9 @@ exe: config
 mlabscripts:
 	chmod +x scripts/*
 	cp -a scripts/* $(INSTALLROOT)/pypeextra
+
+tools:
+	cp Tools/attachim* $(INSTALLROOT)/pypeextra
 
 config:
 	echo idir=$(INSTALLROOT)
