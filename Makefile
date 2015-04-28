@@ -26,7 +26,7 @@ exe: config
 # web-accessible dumps of the logs
 mlabscripts:
 	chmod +x mlab-scripts/*
-	cp -a mlab-scripts/* $(INSTALLROOT)/pypeextra
+	cp -a mlab-scripts/* $(INSTALLROOT)/bin
 
 tools:
 	cp Tools/elogatt* $(INSTALLROOT)/bin
