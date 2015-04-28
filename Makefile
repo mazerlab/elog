@@ -33,7 +33,6 @@ tools:
 	cp Tools/dbfind $(INSTALLROOT)/pypeextra
 
 config:
-	echo idir=$(INSTALLROOT)
 	sh sqlconfig.sh $(INSTALLROOT) >dbsettings.py
 
 initdb:
