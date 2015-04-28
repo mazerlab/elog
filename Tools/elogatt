@@ -11,5 +11,5 @@ fi
 
 echo "SRC:$1" >/tmp/$$
 ${EDITOR} /tmp/$$
-cat /tmp/$$ | attachim.py "$1" "$2"
+cat /tmp/$$ | elogatt.py "$1" "$2"
 rm -f /tmp/$$

@@ -1,11 +1,22 @@
 #!/usr/bin/env python
 # -*- Mode: Python; tab-width: 4; py-indent-offset: 4; -*-
 
-import sys; sys.path.append('%%LIB%%')
+import sys
 import os
 import string
 
-from elog.elogapi import getdb
+try:
+    elogpath = os.popen('elog -dir 2>/dev/null').read()[:-1]
+except:
+    elogpath = None
+    
+if elogpath is None:
+	sys.stderr.write("Can't find elog executable/path\n")
+	sys.exit(1)
+else:
+    elogpath = elogpath + '/lib/elog'
+	sys.path.append(elogpath)
+	from elogapi import getdb
 
 if len(sys.argv) > 1 and (sys.argv[1] == '-d' or sys.argv[1] == '-dir'):
     dir = 1
