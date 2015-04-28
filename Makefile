@@ -20,7 +20,7 @@ exe: config
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog
 	mkdir -p $(MATLABDIR)
-	(cd Tools; sh ./mk_dbfind_m.sh > $(MATLABDIR)/dbfind.m; cd ..)
+	(cd Tools; sh ./mk_dbfind.m.sh > $(MATLABDIR)/dbfind.m; cd ..)
 
 # these are custom scripts for the mazer lab that generate on-line
 # web-accessible dumps of the logs
