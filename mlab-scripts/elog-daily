@@ -15,7 +15,7 @@ else
   d=$1
 fi
 
-/auto/share/pypeextra/elog-gen-monthly-html $d > /auto/www/elogs/$d.html
+/auto/share/bin/elog-gen-monthly-html $d > /auto/www/elogs/$d.html
 if [ "$1" = "" ]; then
   cp /auto/www/elogs/$d.html /auto/www/elogs/monthly.html
 fi

@@ -29,8 +29,8 @@ mlabscripts:
 	cp -a mlab-scripts/* $(INSTALLROOT)/pypeextra
 
 tools:
-	cp Tools/elogatt* $(INSTALLROOT)/pypeextra
-	cp Tools/dbfind $(INSTALLROOT)/pypeextra
+	cp Tools/elogatt* $(INSTALLROOT)/bin
+	cp Tools/dbfind $(INSTALLROOT)/bin
 
 config:
 	sh sqlconfig.sh $(INSTALLROOT) >dbsettings.py

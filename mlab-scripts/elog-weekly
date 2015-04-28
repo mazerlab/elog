@@ -12,7 +12,7 @@ if [ "$1" = "-help" ]; then
 fi
 
 
-/auto/share/pypeextra/elog-gen-weekly-html $1 > /tmp/mlab$$.html
+/auto/share/bin/elog-gen-weekly-html $1 > /tmp/mlab$$.html
 date | mail -r elog@mlab.yale.edu \
 	-S smtp=mail.yale.edu -s "weekly weights" -a /tmp/mlab$$.html \
 	james.mazer@yale.edu
