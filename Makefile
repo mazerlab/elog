@@ -18,17 +18,18 @@ exe: config
 	rm -rf $(INSTALLROOT)/lib/elog
 	mkdir -p $(INSTALLROOT)/lib/elog
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
-	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
-		elog elogatt dbfind qhistory
+	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog
+	(cd Tools; sh ../itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin \
+		elogatt dbfind qhistory; cd ..)
 	mkdir -p $(MATLABDIR)
-	sh mk_dbfind.sh > $(MATLABDIR)/dbfind.m
-	cp elogatt.m $(MATLABDIR)
+	(cd Tools; sh ./mk_dbfind.sh > $(MATLABDIR)/dbfind.m; cd ..)
+	cp Tools/elogatt.m $(MATLABDIR)
 
 # these are custom scripts for the mazer lab that generate on-line
 # web-accessible dumps of the logs
 mlabscripts:
-	chmod +x scripts/*
-	cp -a scripts/* $(INSTALLROOT)/pypeextra
+	chmod +x mlab-scripts/*
+	cp -a mlab-scripts/* $(INSTALLROOT)/pypeextra
 
 tools:
 	cp Tools/attachim* $(INSTALLROOT)/pypeextra
