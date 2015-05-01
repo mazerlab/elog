@@ -25,8 +25,8 @@ exe: config
 # these are custom scripts for the mazer lab that generate on-line
 # web-accessible dumps of the logs
 mlabscripts:
-	chmod +x mlab-scripts/*
-	cp -a mlab-scripts/* $(INSTALLROOT)/bin
+	chmod +x Tools-mlab/*
+	cp -a Tools-mlab/* $(INSTALLROOT)/bin
 
 tools:
 	cp Tools/elogatt* $(INSTALLROOT)/bin
