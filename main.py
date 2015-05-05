@@ -1434,6 +1434,15 @@ def start():
             import dbsettings
             sys.stdout.write('%s\n' % dbsettings.DIR)
             sys.exit(0)
+        elif isarg(arg, '-db'):
+            import dbsettings
+            # print `env` suitable string to stdout with DB info
+            sys.stdout.write('HOST=%s ' % dbsettings.HOST)
+            sys.stdout.write('USER=%s ' % dbsettings.USER)
+            sys.stdout.write('PASS=%s ' % dbsettings.PASS)
+            sys.stdout.write('DB=%s ' % dbsettings.DB)
+            sys.stdout.write('PORT=%s\n' % dbsettings.PORT)
+            sys.exit(0)
         elif isarg(arg, '-y'):
             force_yes = 1
         elif isarg(arg, '-rev'):
