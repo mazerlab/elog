@@ -29,27 +29,27 @@ status = mysql('use mlabdata');
 
 
 % Get Erroneous Experiments %
-experID = mysql(sprintf('select experID from exper where %s="%s"',field,value));
-if isempty(experID) 
+eID = mysql(sprintf('select ID from exper where %s="%s"',field,value));
+if isempty(eID) 
     warning('No Matching Experiments Found!'); 
 end
 %%% FIX EXPER %%%
-for i = 1:length(experID)
+for i = 1:length(eID)
     
     % Get/Display Record Info %
-    ID = num2str(experID(i));
-    [exper, expdate] = mysql(sprintf('select exper,date from exper where experID="%s"',ID));
+    ID = num2str(eID(i));
+    [exper, expdate] = mysql(sprintf('select exper,date from exper where ID="%s"',ID));
     fprintf('Fixing exper: %s in %s \n',exper{:},datestr(expdate,'yyyy-mm-dd'))
     
     % Fix %
     if TEST
         % Print It %
         fprintf('  (')
-        fprintf('update exper set %s="%s" where experID="%s"',field,newvalue,ID);
+        fprintf('update exper set %s="%s" where ID="%s"',field,newvalue,ID);
         fprintf(')\n\n')
     else
         % *** Do It *** %
-        mysql(sprintf('update exper set %s="%s" where experID="%s"',field,newvalue,ID))
+        mysql(sprintf('update exper set %s="%s" where ID="%s"',field,newvalue,ID))
     end
     
 end
@@ -57,33 +57,33 @@ end
 
 
 % Get Erroneous Data Files %
-dfileID = mysql(sprintf('select dfileID from dfile where %s="%s"',field,value));
-if isempty(dfileID) 
+dID = mysql(sprintf('select ID from dfile where %s="%s"',field,value));
+if isempty(dID) 
     warning('No Matching Data Files Found!'); 
 end
 %%% FIX DFILE %%%
-for i = 1:length(dfileID)
+for i = 1:length(dID)
     
     % Get/Display Record Info %
-    ID = num2str(dfileID(i));
-    [exper, expdate] = mysql(sprintf('select exper,date from dfile where dfileID="%s"',ID));
+    ID = num2str(dID(i));
+    [exper, expdate] = mysql(sprintf('select exper,date from dfile where ID="%s"',ID));
     fprintf('Fixing dfile: %s in %s \n',exper{:},datestr(expdate,'yyyy-mm-dd'))
     
     % Fix %
     if TEST
         % Print It %
         fprintf('  (')
-        fprintf('update dfile set %s="%s" where dfileID="%s"',field,newvalue,ID);
+        fprintf('update dfile set %s="%s" where ID="%s"',field,newvalue,ID);
         fprintf(')\n\n')
     else
         % *** Do It *** %
-        mysql(sprintf('update dfile set %s="%s" where dfileID="%s"',field,newvalue,ID))
+        mysql(sprintf('update dfile set %s="%s" where ID="%s"',field,newvalue,ID))
     end
     
     % Fix src %
     if strcmp(field,'exper')
         % Check src for Error %
-        src = mysql(sprintf('select src from dfile where dfileID="%s"',ID));
+        src = mysql(sprintf('select src from dfile where ID="%s"',ID));
         src = src{:}; exper = exper{:};
         ind = strfind(src,exper);
         lng = length(exper);
@@ -105,14 +105,14 @@ for i = 1:length(dfileID)
             if TEST
                 % Print It %
                 fprintf('  (')
-                fprintf('update dfile set src="%s" where dfileID="%s"',src,ID);
+                fprintf('update dfile set src="%s" where ID="%s"',src,ID);
                 fprintf(')\n')
                 fprintf('  (')
                 fprintf('>>mv %s %s',oldsrc,src);
                 fprintf(')\n\n')
             else
                 % *** Do It *** %
-                mysql(sprintf('update dfile set src="%s" where dfileID="%s"',src,ID))
+                mysql(sprintf('update dfile set src="%s" where ID="%s"',src,ID))
                 system(sprintf('mv %s %s',oldsrc,src));
             end
         end

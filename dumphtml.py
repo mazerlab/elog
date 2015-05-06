@@ -232,7 +232,7 @@ def emit_exper(outdir, db, r):
 
     rows = db.query("""
     SELECT * FROM unit
-    WHERE exper='%s' and date like '%s' ORDER BY unitID
+    WHERE exper='%s' and date like '%s' ORDER BY ID
     """ % (r['exper'], r['date'], ))
     if len(rows) > 0:
         # one table row per unit
@@ -284,7 +284,7 @@ def emit_attachment(outdir, db, id):
     """
     
     rows = db.query("""
-    SELECT * FROM attachment WHERE attachmentID=%s
+    SELECT * FROM attachment WHERE ID=%s
     """ % (id,))
     if len(rows) == 0:
         sys.stderr.write('bad attachlink: %s\n' % id)

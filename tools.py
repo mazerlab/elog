@@ -231,7 +231,7 @@ def insert_dfile(db, fname, force=None):
     except:
         user=''
 
-    rows = db.query("""SELECT dfileID FROM dfile WHERE src='%s'""" % fname)
+    rows = db.query("""SELECT ID FROM dfile WHERE src='%s'""" % fname)
 
     crap = 0
     preferred = 0
@@ -247,7 +247,7 @@ def insert_dfile(db, fname, force=None):
     elif force:
         if db.query("""REPLACE INTO dfile (%s)"""
                     """ VALUES (%d,'%s','%s','%s','%s','%s','%s',%d,%d)""" %
-                    (fieldlist, rows[0]['dfileID'],
+                    (fieldlist, rows[0]['ID'],
                      date, exper, animal, fname, taskname,
                      user, crap, preferred,)) is None:
             sys.stderr.write("db replace error: %s\n" % (fname,))
@@ -255,7 +255,7 @@ def insert_dfile(db, fname, force=None):
         sys.stderr.write("skipped dup: %s\n" % fname)
         return 1
 
-    rows = db.query("""SELECT experID FROM exper"""
+    rows = db.query("""SELECT ID FROM exper"""
                     """ WHERE date='%s' AND exper='%s'""" % (date, exper,))
 
     # insert a corresponding experiment, if it doesn't already exist..

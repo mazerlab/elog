@@ -74,7 +74,7 @@ def AddDatafile(exper, animal, user, fname, filetype,
 
     db = getdb()
     try:
-        rows = db.query("""SELECT dfileID FROM dfile WHERE src='%s'""" %
+        rows = db.query("""SELECT ID FROM dfile WHERE src='%s'""" %
                         fname)
 
         if len(rows) == 0:
@@ -86,17 +86,17 @@ def AddDatafile(exper, animal, user, fname, filetype,
                          filetype, user, crap, )) is None:
                 return (0, "db insert error: %s\n" % (fname,))
         elif force:
-            if db.query("""REPLACE INTO dfile (dfileID,"""
+            if db.query("""REPLACE INTO dfile (ID,"""
                         """ date,exper,animal,src,filetype,"""
                         """ user,crap)"""
                         """ VALUES (%d,'%s','%s','%s','%s','%s','%s',%d)""" %
-                        (rows[0]['dfileID'], date, exper, animal,
+                        (rows[0]['ID'], date, exper, animal,
                          fname, filetype, user, crap,)) is None:
                 return (0, "db replace error: %s\n" % (fname,))
         else:
             return (0, "skipped already duplicate file: %s" % fname)
 
-        rows = db.query("""SELECT experID FROM exper"""
+        rows = db.query("""SELECT ID FROM exper"""
                         """ WHERE date='%s' AND exper='%s'""" %
                         (date, exper,))
 

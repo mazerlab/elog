@@ -82,9 +82,9 @@ def attach(tk, im=None, title='no title', note='',
                  srctable, srcID, im,)) is None:
         sys.stderr.write("elog: db insert attachment error\n")
         return
-    rows = db.query("""SELECT attachmentID FROM attachment"""
-                    """ ORDER BY attachmentID DESC LIMIT 1""")
-    id = rows[0]['attachmentID']
+    rows = db.query("""SELECT ID FROM attachment"""
+                    """ ORDER BY ID DESC LIMIT 1""")
+    id = rows[0]['ID']
     if tk:
         w = AttachmentViewer(tk, id, title=title)
     return id
@@ -130,7 +130,7 @@ def pil_getattach(id, size=None):
     db = getdb()
 
     rows = db.query("""SELECT * FROM attachment"""
-                    """ WHERE attachmentID=%d""" % (id,))
+                    """ WHERE ID=%d""" % (id,))
     if len(rows) == 0:
         return None
     imstr = rows[0]['data'].decode('base64')
@@ -175,7 +175,7 @@ class AttachmentViewer(Toplevel):
 
         self.protocol("WM_DELETE_WINDOW", self.close)
 
-        AttachmentViewer.attachmentList[self.rows['attachmentID']] = self
+        AttachmentViewer.attachmentList[self.rows['ID']] = self
 
     def getattach(self):
         import PIL.Image
@@ -184,7 +184,7 @@ class AttachmentViewer(Toplevel):
         db = getdb()
 
         rows = db.query("""SELECT * FROM attachment"""
-                        """ WHERE attachmentID=%d""" % (self.id,))
+                        """ WHERE ID=%d""" % (self.id,))
         imstr = rows[0]['data'].decode('base64')
         im = PIL.ImageTk.PhotoImage(PIL.Image.open(StringIO.StringIO(imstr)))
         return im, rows[0]
@@ -201,7 +201,7 @@ class AttachmentViewer(Toplevel):
 
         # delete actual attachment
         db = getdb()
-        db.query("""DELETE FROM attachment WHERE attachmentID=%d""" %
+        db.query("""DELETE FROM attachment WHERE ID=%d""" %
                  (self.id,))
 
         # note: notes that actually refer to the attachement will be
@@ -211,12 +211,12 @@ class AttachmentViewer(Toplevel):
 
     def save(self):
         self.rv.save(table='attachment',
-                     key=('AttachmentID', self.id))
+                     key=('ID', self.id))
 
     def close(self):
         self.save()
         self.destroy()
-        del AttachmentViewer.attachmentList[self.rows['attachmentID']]
+        del AttachmentViewer.attachmentList[self.rows['ID']]
 
 
 def clipcopy(widget, str):
@@ -478,7 +478,7 @@ class RecordView(Frame):
         # messing with the record while you have it open..
         if (table is 'session') and (not key[0] is None):
             rows = db.query("""SELECT lastmod FROM session"""
-                            """ WHERE sessionID=%d""" % key[1])
+                            """ WHERE ID=%d""" % key[1])
             last = rows[0]['lastmod']
             if last != self.getval('lastmod'):
                 i = warn(self,
@@ -549,7 +549,7 @@ class DatafileFrame(Frame):
         self.rv = RecordView(self, layout.DFILE_FIELDS, True)
         self.rv.pack(expand=1, fill=BOTH)
         self.rv.setall(rows[0])
-        self.dfileID = rows[0]['dfileID']
+        self.ID = rows[0]['ID']
         
         b = Button(f, text=os.path.basename(src), \
                    command=lambda w=master,l=link: clipcopy(w,l))
@@ -563,7 +563,7 @@ class DatafileFrame(Frame):
 
      def save(self):
          self.rv.save(table='dfile',
-                      key=('dfileID', self.dfileID))
+                      key=('ID', self.ID))
 
 class UnitWindow:
     def __init__(self, exper, unit):
@@ -660,7 +660,7 @@ class UnitWindow:
             self.rv.save(table='unit')
         else:
             self.rv.save(table='unit',
-                         key=('unitID', rows[0]['unitID']))
+                         key=('ID', rows[0]['ID']))
 
 class ExperWindow(Frame):
     def __init__(self, master, name=None, **kwargs):
@@ -702,7 +702,7 @@ class ExperWindow(Frame):
         if add:
             newtag = tag_select(self)
             if not newtag is None:
-                rows = db.query("""SELECT tags,experID FROM exper"""
+                rows = db.query("""SELECT tags,ID FROM exper"""
                                 """ WHERE exper='%(exper)s'"""
                                 """ AND date='%(date)s'""" % d)
                 tags = rows[0]['tags']
@@ -712,18 +712,18 @@ class ExperWindow(Frame):
                     tags = newtag
                 tags = ",".join(list(set(tags.split(','))))
                 db.query("""UPDATE exper SET tags='%s'"""
-                         """ WHERE experID=%d""" % (tags,
-                                                    rows[0]['experID']))
+                         """ WHERE ID=%d""" % (tags,
+                                                    rows[0]['ID']))
         else:
-            rows = db.query("""SELECT tags,experID FROM exper"""
+            rows = db.query("""SELECT tags,ID FROM exper"""
                             """ WHERE exper='%(exper)s'"""
                             """ AND date='%(date)s'""" % d)
             tags = ask(self, 'tags:', rows[0]['tags'])
             if not tags is None:
                 tags = ",".join(list(set(tags.split(','))))
                 db.query("""UPDATE exper SET tags='%s'"""
-                         """ WHERE experID=%d""" % (tags,
-                                                    rows[0]['experID']))
+                         """ WHERE ID=%d""" % (tags,
+                                                    rows[0]['ID']))
 
     def getunitbook(self):
         """Get handle for unit-notebook, or else make one if it doesn't exist.
@@ -770,7 +770,7 @@ class ExperWindow(Frame):
         db = getdb()
         rows = db.query("""SELECT src FROM dfile"""
                         """ WHERE exper='%s' AND date='%s'"""
-                        """ ORDER BY dfileID""" % (exper, date,))
+                        """ ORDER BY ID""" % (exper, date,))
         nr = 3
         self.dfiles = []
         for row in rows:
@@ -798,7 +798,7 @@ class ExperWindow(Frame):
             df.save()
 
         # then save exper
-        rows = db.query("""SELECT experID,exper,date FROM exper"""
+        rows = db.query("""SELECT ID,exper,date FROM exper"""
                         """ WHERE exper='%s' and date='%s'""" %
                         (d['exper'], d['date'],))
         if len(rows) > 1:
@@ -808,10 +808,10 @@ class ExperWindow(Frame):
         else:
             if len(rows) > 0:
                 self.rv.save(table='exper',
-                             key=('experID', rows[0]['experID']))
+                             key=('ID', rows[0]['ID']))
             else:
                 self.rv.save(table='exper',
-                             key=('experID', None))
+                             key=('ID', None))
 
     def new_unit(self, unit=None):
         d = self.rv.getall()
@@ -821,7 +821,7 @@ class ExperWindow(Frame):
             if unit is None:
                 return
 
-        rows = db.query("""SELECT unitID FROM unit"""
+        rows = db.query("""SELECT ID FROM unit"""
                         """ WHERE animal='%s' AND date='%s' AND"""
                         """ exper='%s' AND unit='%s'""" %
                         (d['animal'], d['date'], d['exper'], unit,))
@@ -854,7 +854,7 @@ class SessionWindow(Frame):
 
     def view(self, date=None):
         db = getdb()
-        rows = db.query("""SELECT sessionID, date FROM session"""
+        rows = db.query("""SELECT ID, date FROM session"""
                         """ WHERE animal='%s' ORDER BY date""" %
                         (self.animal,))
 
@@ -876,8 +876,8 @@ class SessionWindow(Frame):
 
         self.n = max(0, min(self.n, nmax))
         rows = db.query("""SELECT * FROM session"""
-                        """ WHERE sessionID=%d ORDER BY date""" %
-                        (rows[self.n]['sessionID'],))
+                        """ WHERE ID=%d ORDER BY date""" %
+                        (rows[self.n]['ID'],))
         row = rows[0]
         for k in self.rv.keys():
             self.rv.setval(k, row[k])
@@ -918,7 +918,7 @@ class SessionWindow(Frame):
             warn(self, "Please specify date to save.")
             return 0
 
-        rows = db.query("""SELECT sessionID FROM session"""
+        rows = db.query("""SELECT ID FROM session"""
                         """ WHERE animal='%s' and date='%s'""" %
                         (d['animal'], d['date'],))
         n = len(rows)
@@ -928,9 +928,9 @@ class SessionWindow(Frame):
             warn(self, 'Duplicated sessionId!')
         elif n == 1:
             # update existing session
-            sessionID = rows[0]['sessionID']
+            ID = rows[0]['ID']
             e = self.rv.save(table='session',
-                             key=('sessionID', sessionID))
+                             key=('ID', ID))
         else:
             # create entry for a brand new session
             e = self.rv.save(table='session')
@@ -1235,7 +1235,7 @@ class GuiWindow(Frame):
 
     def exists(self, animal, date):
         db = getdb()
-        rows = db.query("""SELECT sessionID, date FROM session"""
+        rows = db.query("""SELECT ID, date FROM session"""
                         """ WHERE animal='%s' AND date='%s'"""
                         """ ORDER BY date""" %
                         (animal, date,))
@@ -1293,18 +1293,18 @@ class GuiWindow(Frame):
         link = "\n<elog:exper=%s/%s>\n" % (d['date'], exper)
         note = d['note'] + link
 
-        rows = db.query("""SELECT sessionID FROM session"""
+        rows = db.query("""SELECT ID FROM session"""
                         """ WHERE animal='%s' and date='%s'""" %
                         (d['animal'], d['date'],))
-        sessionID = rows[0]['sessionID']
+        ID = rows[0]['ID']
 
         # following command is the problem!! REPLACE deletes row
         # first.. should be UPDATE instead.. record already should
         # exist!
         db.query("""UPDATE session SET animal='%s', date='%s', note='%s'"""
-                 """ WHERE sessionID=%d""" %
+                 """ WHERE ID=%d""" %
                  (d['animal'], d['date'],
-                  str(note).replace("'", "\\'"), sessionID),)
+                  str(note).replace("'", "\\'"), ID),)
 
         self.jump(0, save=0)
 

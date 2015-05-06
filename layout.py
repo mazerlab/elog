@@ -10,8 +10,6 @@ from guitools import *
 # has (row,col..), everything must!
 
 SESSION_FIELDS = (
-    # sessionID
-
     ("lastmod",         None, None, DISABLED, None, None, None),
     
     ("animal",          None, None, DISABLED, 10,  (0, 0, 1), None),
@@ -48,7 +46,6 @@ SESSION_FIELDS = (
     )
 
 EXPER_FIELDS = (
-    # experID
     ("exper",           None, None, DISABLED, 10,      (0, 0, 1), None),
     ("animal",          None, None, DISABLED, 10,      (0, 1, 1), None),
     ("date",            None, sdate, DISABLED, 12,      (0, 2, 1), None),
@@ -58,7 +55,6 @@ EXPER_FIELDS = (
     )
 
 UNIT_FIELDS = (
-    # unitID
     ("unit",            None, None, DISABLED, 10,      (0, 0, 1), None),
     ("exper",           None, None, DISABLED, 10,      (1, 0, 1), None),
     ("animal",          None, None, DISABLED, 10,      (2, 0, 1), None),
@@ -85,7 +81,6 @@ UNIT_FIELDS = (
     )
 
 DFILE_FIELDS = (
-    # dfileID
     ("exper",           None, None, DISABLED, 10,     (0, 0, 1), None),
     ("animal",          None, None, DISABLED, 10,     (0, 1, 1), None),
     ("date",            None, sdate, DISABLED, 12,    (0, 2, 1), None),
@@ -102,7 +97,6 @@ DFILE_FIELDS = (
     )
 
 ATTACHMENT_FIELDS = (
-    # attachmentID
     ("title",          None, None, NORMAL, 40,       (0, 0, 1), None),
     ("user",           None, None, DISABLED, 10,     (0, 1, 1), None),
     ("date",           None, None, DISABLED, 12,     (0, 2, 1), None),

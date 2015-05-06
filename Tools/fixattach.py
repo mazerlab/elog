@@ -17,7 +17,7 @@ import HTML, elogapi
 if __name__ == '__main__':
     db = elogapi.getdb()
 
-    rows = db.query("""SELECT dfileID, attachlist, note """
+    rows = db.query("""SELECT ID, attachlist, note """
                     """ FROM dfile """
                     """ WHERE attachlist IS NOT NULL""")
      
@@ -35,8 +35,8 @@ if __name__ == '__main__':
                     update = 1
             if update:
                 xxx = db.query("""UPDATE dfile SET note="%s" """
-                               """ WHERE dfileID=%d""" % \
-                               (newnote, int(r['dfileID'],)))
+                               """ WHERE ID=%d""" % \
+                               (newnote, int(r['ID'],)))
                 if xxx is None:
-                    sys.stderr.write('failed on dfileID=%s\n' % r['dfileID'])
+                    sys.stderr.write('failed on ID=%s\n' % r['ID'])
                     sys.exit(1)
