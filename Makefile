@@ -1,5 +1,3 @@
-# note
-
 ifeq ($(shell domainname), mlab)
   INSTALLROOT ?= /auto/share
   MATLABDIR = $(INSTALLROOT)/pypeextra
@@ -10,23 +8,13 @@ endif
 
 MODULES=*.py
 
-install: exe
-
-mlab: install mlabscripts tools
-
-exe: config
+install: config tools
 	rm -rf $(INSTALLROOT)/lib/elog
 	mkdir -p $(INSTALLROOT)/lib/elog
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog
 	mkdir -p $(MATLABDIR)
 	(cd Tools; sh ./mk_dbfind.m.sh > $(MATLABDIR)/dbfind.m; cd ..)
-
-# these are custom scripts for the mazer lab that generate on-line
-# web-accessible dumps of the logs
-mlabscripts:
-	chmod +x Tools-mlab/*
-	cp -a Tools-mlab/* $(INSTALLROOT)/bin
 
 tools:
 	cp Tools/elogatt* $(INSTALLROOT)/bin
@@ -35,7 +23,7 @@ tools:
 config:
 	sh sqlconfig.sh $(INSTALLROOT) >dbsettings.py
 
-initdb:
+createdb:
 	sh ./dbmaker.sh
 
 clean:
@@ -62,4 +50,14 @@ test: config
 # that 'make initdb' will use to build an empty database.
 dist: 
 	sh ./mk_dbmaker.sh
+
+###################### mlab only ###############################
+# these are custom scripts for the mazer lab that generate on-line
+# web-accessible dumps of the logs
+
+mlabscripts:
+	chmod +x Tools-mlab/*
+	cp -a Tools-mlab/* $(INSTALLROOT)/bin
+
+mlab: install mlabscripts tools
 

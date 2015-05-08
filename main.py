@@ -45,8 +45,7 @@ logwin = None
 def ins_attachment(event, w):
     """Insert current timestamp into text widget.
     """
-    id = attach(w, im=None, title='',
-                srctable='in-text', srcID=0)
+    id = attach(w, im=None, title='')
     txt = event.widget
     tag = '<elog:attach=%d>' % id
     txt.mark_set('tmp', INSERT)
@@ -64,8 +63,7 @@ def ins_attachment(event, w):
     txt.window_create(INSERT, window=b, padx=10)
     
 
-def attach(tk, im=None, title='no title', note='',
-           srctable=None, srcID=None):
+def attach(tk, im=None, title='no title', note=''):
     """Use imagemagick 'import' command to grab a screen capture
     of a window or region as JPEG image and store in string
     """
@@ -76,10 +74,9 @@ def attach(tk, im=None, title='no title', note='',
         im = os.popen('import jpeg:-', 'r').read().encode('base64')
 
     if db.query("""INSERT INTO attachment"""
-                """ (type,user,date,title,note,srctable,srcID,data)"""
-                """ VALUES ('%s','%s','%s','%s','%s','%s',%d,'%s')""" % \
-                ('jpeg', getuser(), today(), title, note,
-                 srctable, srcID, im,)) is None:
+                """ (type,user,date,title,note,data)"""
+                """ VALUES ('%s','%s','%s','%s','%s','%s')""" % \
+                ('jpeg', getuser(), today(), title, note, im,)) is None:
         sys.stderr.write("elog: db insert attachment error\n")
         return
     rows = db.query("""SELECT ID FROM attachment"""

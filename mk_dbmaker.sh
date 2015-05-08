@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ `domainname` != mlab ];
+if [ `domainname` != mlab ]; then
   echo "This should only be run in the mazer lab!"
   exit 1
 fi
