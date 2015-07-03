@@ -1204,7 +1204,7 @@ class GuiWindow(Frame):
                 self.session.rv.setval('xdtb', round(xdtb,1))
                 self.session.rv.setval('dtb', round(dtb,1))
             except:
-                warn(self, 'DTB Calc: error occurred, check', timeout=1000)
+                #warn(self, 'DTB Calc: error occurred, check', timeout=1000)
                 dtb = -1.0
                 xdtb = -1.0
 
