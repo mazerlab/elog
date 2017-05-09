@@ -1414,11 +1414,16 @@ def start():
     try:
         tk = Tk()
         #tk.tk_setPalette(background='honeydew', foreground='black')
+        tk.tk_setPalette(background='white', foreground='black')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
-        tk.option_add("*Font", 'Helvetica 8')
-        tk.option_add("*Entry.Font", 'Courier 8')
-        tk.option_add("*Text.Font", 'Courier 8')
+        #tk.option_add("*Font", 'Helvetica 8')
+        #tk.option_add("*Entry.Font", 'Courier 8 bold')
+        #tk.option_add("*Text.Font", 'Courier 8 bold')
+        tk.option_add("*Font", 'fixedsys 8')
+        tk.option_add("*Background", 'white')
+        tk.option_add("*Entry.Font", 'fixedsys 8 bold')
+        tk.option_add("*Text.Font", 'fixedsys 8 bold')
         tk.option_add("*DisabledForeground", 'black')
     except:
         tk = None
