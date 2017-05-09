@@ -1420,9 +1420,14 @@ def start():
         #tk.option_add("*Font", 'Helvetica 8')
         #tk.option_add("*Entry.Font", 'Courier 8 bold')
         #tk.option_add("*Text.Font", 'Courier 8 bold')
-        tk.option_add("*Font", 'fixedsys 8')
-        tk.option_add("*Entry.Font", 'fixedsys 8 bold')
-        tk.option_add("*Text.Font", 'fixedsys 8 bold')
+        
+        #tk.option_add("*Font", 'fixedsys 8')
+        #tk.option_add("*Entry.Font", 'fixedsys 8 bold')
+        #tk.option_add("*Text.Font", 'fixedsys 8 bold')
+
+        tk.option_add("*Entry.Font", 'TkFixedFont')
+        tk.option_add("*Text.Font", 'TkFixedFont')
+
         tk.option_add("*DisabledForeground", 'black')
         tk.option_add("*Background", 'white')
         tk.option_add("*selectBackground", 'blue')
