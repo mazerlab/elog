@@ -1091,9 +1091,6 @@ class GuiWindow(Frame):
                          variable=GuiWindow.showdel,
                          command=lambda s=self:s.refresh())
 
-        menu.addmenuitem('Edit', 'command', label='tagtest',
-                         command=lambda tk=master: tag_select(tk))
-
         menu.addmenuitem('Edit', 'separator')
         menu.addmenuitem('Edit', 'command', label='Attach window (Alt-A)',
                          command=lambda s=self: info(s,
@@ -1417,20 +1414,16 @@ def start():
         tk.tk_setPalette(background='white', foreground='black')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
-        #tk.option_add("*Font", 'Helvetica 8')
-        #tk.option_add("*Entry.Font", 'Courier 8 bold')
-        #tk.option_add("*Text.Font", 'Courier 8 bold')
-        
-        #tk.option_add("*Font", 'fixedsys 8')
-        #tk.option_add("*Entry.Font", 'fixedsys 8 bold')
-        #tk.option_add("*Text.Font", 'fixedsys 8 bold')
-
         tk.option_add("*Entry.Font", 'TkFixedFont')
         tk.option_add("*Text.Font", 'TkFixedFont')
-
         tk.option_add("*DisabledForeground", 'black')
         tk.option_add("*Background", 'white')
+        
         tk.option_add("*selectBackground", 'blue')
+        
+        tk.option_add("*Scrollbar.background", 'black')
+        tk.option_add("*Scrollbar.troughColor", 'gray50')
+        tk.option_add("*Scrollbar.activeBackground", 'blue')
     except:
         tk = None
 
