@@ -86,7 +86,7 @@ class Database(object):
             self.passwd = _env('ELOG_PASS', dbsettings.PASS)
             
         self.quiet = quiet
-
+        
         self.connect()
 
     def __del__(self):
@@ -139,6 +139,16 @@ class Database(object):
             sys.stderr.write('SQL ERROR #%d: <%s>\nQUERY=<%s>\n' %
                              (number, msg, cmd))
             return None
+
+    def dquery(self, readonly, cmd, *args):
+        """
+        For destructive queries: only allows if readonly is False
+        """
+        if readonly:
+            sys.stderr.write("RO, skipped: <%s...>\n" % cmd[:45]);
+            return
+        else:
+            return self.query(cmd, *args)
 
 def isarg(arg, option):
     if arg[0:len(option)] == option:

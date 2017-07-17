@@ -73,10 +73,11 @@ def attach(tk, im=None, title='no title', note=''):
     if im is None:
         im = os.popen('import jpeg:-', 'r').read().encode('base64')
 
-    if db.query("""INSERT INTO attachment"""
+    if db.dquery(READ_ONLY,
+                """INSERT INTO attachment"""
                 """ (type,user,date,title,note,data)"""
                 """ VALUES ('%s','%s','%s','%s','%s','%s')""" % \
-                ('jpeg', getuser(), today(), title, note, im,)) is None:
+                    ('jpeg', getuser(), today(), title, note, im,)) is None:
         sys.stderr.write("elog: db insert attachment error\n")
         return
     rows = db.query("""SELECT ID FROM attachment"""
@@ -94,7 +95,7 @@ def isdel(date, exper):
                          % (date, exper,))
     return rows[0]['deleted']
 
-def alltags():
+def all_cloudtags():
     """Get list of all tags from database
     """
     tags = {}
@@ -109,11 +110,11 @@ def alltags():
                         tags[tag] = 1
     return tags.keys()
 
-def tag_select(parent):
+def cloudtag_select(parent):
     d = Pmw.ComboBoxDialog(parent,
                            title='Select tag',
                            buttons = ('Ok', 'Cancel'),
-                           scrolledlist_items = alltags())
+                           scrolledlist_items = all_cloudtags())
     if d.activate() == 'Ok':
         return d.get()
     else:
@@ -187,10 +188,6 @@ class AttachmentViewer(Toplevel):
         return im, rows[0]
 
     def db_delete(self):
-        if READ_ONLY:
-            warn(self, "\nRead only mode!\n", ("Ok",))
-            return
-
         i = warn(self, "\nReally delete attachment?\n",
                  ("Ok", "Cancel"))
         if not i == 'Ok':
@@ -198,8 +195,9 @@ class AttachmentViewer(Toplevel):
 
         # delete actual attachment
         db = getdb()
-        db.query("""DELETE FROM attachment WHERE ID=%d""" %
-                 (self.id,))
+        db.dquery(READ_ONLY,
+                  """DELETE FROM attachment WHERE ID=%d""" %
+                      (self.id,))
 
         # note: notes that actually refer to the attachement will be
         # deleted the next time they are displayed..
@@ -465,10 +463,6 @@ class RecordView(Frame):
     def save(self, table, key=(None,None)):
         """Save current on-screen record to specified database table.
         """
-        if READ_ONLY:
-            warn(self, "\nRead only mode!\n", ("Ok",))
-            return
-
         db = getdb()
         
         # for session records only, check to make sure nobody's been
@@ -479,8 +473,8 @@ class RecordView(Frame):
             last = rows[0]['lastmod']
             if last != self.getval('lastmod'):
                 i = warn(self,
-                 "\nSession modified while open, overwrite changes?\n",
-                 ("Ok", "Cancel"))
+                 "\nRecords modified while open. Overwrite changes?\n"
+                 ("Overwrite", "Skip save (& maybe exit)"))
                 if i != 'Ok':
                     return
             else:
@@ -511,11 +505,13 @@ class RecordView(Frame):
                     if len(l):
                         l = l + ','
                     l = l + "%s=%s" % (k, v)
-            db.query("""UPDATE %s SET %s WHERE %s='%s'""" % \
-                     (table, l, keyfield, keyvalue))
+            db.dquery(READ_ONLY,
+                      """UPDATE %s SET %s WHERE %s='%s'""" % \
+                        (table, l, keyfield, keyvalue))
         else:
-            db.query("""INSERT INTO %s (%s) VALUES %s""" % \
-                     (table, string.join(names, ','), tuple(values)))
+            db.dquery(READ_ONLY,
+                      """INSERT INTO %s (%s) VALUES %s""" % \
+                        (table, string.join(names, ','), tuple(values)))
 
         for child in self._children:
             try:
@@ -620,11 +616,6 @@ class UnitWindow:
     def delete(self):
         """Delete this unit from SQL database and delete from GUI.
         """
-
-        if READ_ONLY:
-            warn(self, "\nRead only mode!\n", ("Ok",))
-            return
-
         i = warn(self.exper,
                  "\nReally delete %s?\n" % self.unit,
                  ("Ok", "Cancel"))
@@ -639,10 +630,11 @@ class UnitWindow:
 
             db = getdb()
             # delete from database -- don't do this the other way around..
-            db.query("""DELETE FROM unit"""
-                     """ WHERE animal='%s' AND date='%s' AND"""
-                     """ exper='%s' AND unit='%s'""" %
-                     (d['animal'], d['date'], d['exper'], self.unit,))
+            db.dquery(READ_ONLY,
+                      """DELETE FROM unit"""
+                      """ WHERE animal='%s' AND date='%s' AND"""
+                      """ exper='%s' AND unit='%s'""" %
+                        (d['animal'], d['date'], d['exper'], self.unit,))
 
     def save(self):
         """Save unit data to SQL database
@@ -672,15 +664,18 @@ class ExperWindow(Frame):
         if name:
             Label(buttonbar, text=name).pack(side=LEFT)
 
-        self.tagb = Button(buttonbar, text='+Tag', \
-                           command=lambda: self.tag(add=1))
-        createToolTip(self.tagb, 'add tag')
-        self.tagb.pack(side=LEFT)
+        if 0:
+            self.tagb = Button(buttonbar, text='+Tag', \
+                               command=lambda: self.cloudtag(add=1))
+            createToolTip(self.tagb, 'add tag')
+            self.tagb.pack(side=LEFT)
 
-        b = Button(buttonbar, text='-Tag', \
-                   command=lambda: self.tag(add=0))
-        createToolTip(b, 'edit/delete tags')
-        b.pack(side=LEFT)
+            b = Button(buttonbar, text='-Tag', \
+                       command=lambda: self.cloudtag(add=0))
+            createToolTip(b, 'edit/delete tags')
+            b.pack(side=LEFT)
+        else:
+            self.tagb = None
 
         b = Button(buttonbar, text='New Unit', \
                    command=self.new_unit)
@@ -693,11 +688,12 @@ class ExperWindow(Frame):
         self.unitbook = None
         self.unitlist = []
 
-    def tag(self, add=1):
+    def cloudtag(self, add=1):
+        print "old tag method", add
         d = self.rv.getall()
         db = getdb()
         if add:
-            newtag = tag_select(self)
+            newtag = cloudtag_select(self)
             if not newtag is None:
                 rows = db.query("""SELECT tags,ID FROM exper"""
                                 """ WHERE exper='%(exper)s'"""
@@ -708,9 +704,9 @@ class ExperWindow(Frame):
                 else:
                     tags = newtag
                 tags = ",".join(list(set(tags.split(','))))
-                db.query("""UPDATE exper SET tags='%s'"""
-                         """ WHERE ID=%d""" % (tags,
-                                                    rows[0]['ID']))
+                db.dquery(READ_ONLY,
+                          """UPDATE exper SET tags='%s'"""
+                          """ WHERE ID=%d""" % (tags, rows[0]['ID']))
         else:
             rows = db.query("""SELECT tags,ID FROM exper"""
                             """ WHERE exper='%(exper)s'"""
@@ -718,9 +714,9 @@ class ExperWindow(Frame):
             tags = ask(self, 'tags:', rows[0]['tags'])
             if not tags is None:
                 tags = ",".join(list(set(tags.split(','))))
-                db.query("""UPDATE exper SET tags='%s'"""
-                         """ WHERE ID=%d""" % (tags,
-                                                    rows[0]['ID']))
+                db.dquery(READ_ONLY,
+                          """UPDATE exper SET tags='%s'"""
+                          """ WHERE ID=%d""" % (tags, rows[0]['ID']))
 
     def getunitbook(self):
         """Get handle for unit-notebook, or else make one if it doesn't exist.
@@ -743,10 +739,11 @@ class ExperWindow(Frame):
                             """ WHERE exper='%s' AND date='%s'""" %
                             (exper, date,))
             if len(rows) > 0:
-                if len(rows[0]['tags']) > 0:
-                    createToolTip(self.tagb, 'tags: ' + rows[0]['tags'])
-                else:
-                    createToolTip(self.tagb, 'add tags')
+                if self.tagb:
+                    if len(rows[0]['tags']) > 0:
+                        createToolTip(self.tagb, 'tags: ' + rows[0]['tags'])
+                    else:
+                        createToolTip(self.tagb, 'add tags')
                 self.rv.setall(rows[0])
                 self.date = date
                 self.exper = exper
@@ -1241,11 +1238,8 @@ class GuiWindow(Frame):
         self.destroy()
 
     def save(self):
-        if READ_ONLY:
-            warn(self, "\nRead only mode!\n", ("Ok",))
-        else:
-            self.session.save()
-            Msg("Saved.")
+        self.session.save()
+        Msg("Saved.")
         return 1
 
     def view(self, date=None, exper=None):
@@ -1280,9 +1274,10 @@ class GuiWindow(Frame):
         db = getdb()
         
         # insert empty new exper in the database
-        db.query("""INSERT INTO exper (exper, animal, date, time)"""
-                 """ VALUES %s""" %
-                 ((exper, self.animal, date, time.strftime('%H%M-')),))
+        db.dquery(READ_ONLY,
+                  """INSERT INTO exper (exper, animal, date, time)"""
+                  """ VALUES %s""" %
+                      ((exper, self.animal, date, time.strftime('%H%M-')),))
 
         link = "\n<elog:exper=%s/%s>\n" % (d['date'], exper)
         note = d['note'] + link
@@ -1295,10 +1290,11 @@ class GuiWindow(Frame):
         # following command is the problem!! REPLACE deletes row
         # first.. should be UPDATE instead.. record already should
         # exist!
-        db.query("""UPDATE session SET animal='%s', date='%s', note='%s'"""
-                 """ WHERE ID=%d""" %
-                 (d['animal'], d['date'],
-                  str(note).replace("'", "\\'"), ID),)
+        db.dquery(READ_ONLY,
+                  """UPDATE session SET animal='%s', date='%s', note='%s'"""
+                  """ WHERE ID=%d""" %
+                    (d['animal'], d['date'],
+                    str(note).replace("'", "\\'"), ID),)
 
         self.jump(0, save=0)
 
@@ -1341,7 +1337,7 @@ mlab database-backed electronic log notebook tool
 usage: %s [options] [date] [exper]
 
 General options:
-  -r                       read only mode!
+  -r/-ro                   read only mode!
   -info                    list animals in database to stdout (and exit)
   -q                       query animal and date info from user
   -animal=<animal name>    select animal *FULL NAME, NOT ABBREV*
@@ -1383,6 +1379,8 @@ def start():
     import datetime
     import calendar
 
+    global READ_ONLY
+
     if len(getuser()) == 0:
         sys.stderr.write('elog: no user information available!\n')
         sys.exit(1)
@@ -1410,20 +1408,21 @@ def start():
 
     try:
         tk = Tk()
-        #tk.tk_setPalette(background='honeydew', foreground='black')
-        tk.tk_setPalette(background='white', foreground='black')
+        #tk.tk_setPalette(background='yellow', foreground='black')
         tk.withdraw()
         Pmw.initialise(tk, size=8)
+        #tk.option_add("*DisabledForeground", 'black')
+        #tk.option_add("*Background", 'white')
+        #tk.option_add("*selectBackground", 'blue')
+        
         tk.option_add("*Entry.Font", 'TkFixedFont')
         tk.option_add("*Text.Font", 'TkFixedFont')
-        tk.option_add("*DisabledForeground", 'black')
-        tk.option_add("*Background", 'white')
         
-        tk.option_add("*selectBackground", 'blue')
+        #tk.option_add("*Scrollbar.background", 'black')
+        #tk.option_add("*Scrollbar.troughColor", 'gray50')
+        #tk.option_add("*Scrollbar.activeBackground", 'blue')
         
-        tk.option_add("*Scrollbar.background", 'black')
-        tk.option_add("*Scrollbar.troughColor", 'gray50')
-        tk.option_add("*Scrollbar.activeBackground", 'blue')
+
     except:
         tk = None
 
@@ -1448,7 +1447,7 @@ def start():
             force_yes = 1
         elif isarg(arg, '-rev'):
             rev = 1
-        elif isarg(arg, '-r'):
+        elif isarg(arg, '-r') or isarg(arg, '-ro'):
             READ_ONLY = True
         elif isarg(arg, '-info'):
             info = 1
