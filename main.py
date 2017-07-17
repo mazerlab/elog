@@ -473,8 +473,8 @@ class RecordView(Frame):
             last = rows[0]['lastmod']
             if last != self.getval('lastmod'):
                 i = warn(self,
-                 "\nRecords modified while open. Overwrite changes?\n"
-                 ("Overwrite", "Skip save (& maybe exit)"))
+                 "\nRecords modified while open. Overwrite changes?\n",
+                 ("Overwrite", "Skip save (& discard any changes)"))
                 if i != 'Ok':
                     return
             else:
