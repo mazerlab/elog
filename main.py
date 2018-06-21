@@ -887,9 +887,9 @@ class SessionWindow(Frame):
                              time.strptime(d['date'], '%Y-%m-%d'))
 
         db = getdb()
-        GuiWindow.root.winfo_toplevel().title("db:%s@%s `%s` %s" %
-                                              (db.db, db.host,
-                                               d['animal'], dstr))
+        title = "db:%s@%s `%s` %s" % (db.db, db.host, d['animal'], dstr)
+        title = "elog:%s" % (d['animal'],)
+        GuiWindow.root.winfo_toplevel().title(title)
 
         # cache pointer to last record accessed in homedir for next time
         saveConfig(self)
