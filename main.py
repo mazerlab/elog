@@ -24,7 +24,7 @@ import time
 import re
 import numpy as np
 
-from keyboard import keyboard
+#from keyboard import keyboard
 
 if os.environ.has_key('DISPLAY'):
     from Tkinter import *
@@ -883,13 +883,13 @@ class SessionWindow(Frame):
                         """ ORDER BY exper ASC""" %
                         (d['animal'], d['date'],))
 
+        db = getdb()
+        shorttitle = "elog:%s" % (d['animal'],)
+        GuiWindow.root.winfo_toplevel().title(shorttitle)
+
         dstr = time.strftime('%a %Y-%m-%d',
                              time.strptime(d['date'], '%Y-%m-%d'))
-
-        db = getdb()
-        title = "db:%s@%s `%s` %s" % (db.db, db.host, d['animal'], dstr)
-        title = "elog:%s" % (d['animal'],)
-        GuiWindow.root.winfo_toplevel().title(title)
+        Msg(dstr)
 
         # cache pointer to last record accessed in homedir for next time
         saveConfig(self)
