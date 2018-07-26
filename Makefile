@@ -39,7 +39,7 @@ clean:
 testdata:
 	./test-elog -r
 
-# make an inplace version of elog for use with test-elog
+# make an inplace version of elog for use with test-elog or running ./elog
 test: config
 	@sed s^%%LIB%%^$(shell dirname $(shell pwd))^g \
 		<elog.template >./elog

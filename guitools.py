@@ -65,12 +65,12 @@ def ask(master, prompt, default):
         return None
 
 def info(master, mesg, **kwargs):
-    warn(master, mesg, title='Info', icon_bitmap=None, **kwargs)
+    return warn(master, mesg, title='Info', icon_bitmap=None, **kwargs)
 
 def warn(master, mesg, buttons=("Dismiss",), timeout=None,
          title='Warning', icon_bitmap='warning'):
     """
-    Simple warning message dialog box
+    Simple warning message dialog box - returns button # selected (0, 1, ...)
     """
     x, y = master.winfo_pointerxy()   # -1 if off screen
     w = Pmw.MessageDialog(master,
@@ -86,7 +86,13 @@ def warn(master, mesg, buttons=("Dismiss",), timeout=None,
         w.after(timeout, lambda w=w: w.destroy())
         w.activate(geometry='+%d+%d' % (x,y))
     else:
-        return w.activate(geometry='+%d+%d' % (x,y))
+        resp = w.activate(geometry='+%d+%d' % (x,y))
+        n = 0
+        for b in buttons:
+            if resp is b:
+                return n
+            n = n + 1
+        return None
 
 def askyesno(master, title, msg, icon_bitmap='warning'):
     """

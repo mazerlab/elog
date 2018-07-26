@@ -190,7 +190,7 @@ class AttachmentViewer(Toplevel):
     def db_delete(self):
         i = warn(self, "\nReally delete attachment?\n",
                  ("Ok", "Cancel"))
-        if not i == 'Ok':
+        if i > 0:
             return
 
         # delete actual attachment
@@ -474,9 +474,9 @@ class RecordView(Frame):
             if last != self.getval('lastmod'):
                 i = warn(self,
                  "\nRecords modified while open. Overwrite changes?\n",
-                 ("Overwrite", "Skip save (& discard any changes)"))
-                if i != 'Ok':
-                    return
+                 ("Overwrite", "Cancel save (discard changes!)"))
+                if i > 0:
+                    return False
             else:
                 # update lastmod with current time in 1/10 secs as the
                 # new change time
@@ -524,6 +524,8 @@ class RecordView(Frame):
                 Msg('save err: %s' % self._children_info[child])
 
         Msg("Saved record.")
+        
+        return True
 
 class DatafileFrame(Frame):
      def __init__(self, master, src, **kwargs):
@@ -619,7 +621,7 @@ class UnitWindow:
         i = warn(self.exper,
                  "\nReally delete %s?\n" % self.unit,
                  ("Ok", "Cancel"))
-        if i == 'Ok':
+        if i == 0:
             self.save()
             d = self.rv.getall()
             self.exper.unitbook.delete(self.unit)
@@ -929,9 +931,9 @@ class SessionWindow(Frame):
             # create entry for a brand new session
             e = self.rv.save(table='session')
 
-        Msg("Saved session.")
-
-        return 1
+        if e:
+            Msg("Saved session.")
+        return e
 
     def today(self, date=None):
         """
@@ -1056,9 +1058,9 @@ class GuiWindow(Frame):
         menu.addmenu('File', '', '')
         menu.addmenuitem('File', 'command', label='Save (Ctrl-S)',
                          command=self.save)
-        menu.addmenuitem('File', 'command', label='Exit w/out save',
+        menu.addmenuitem('File', 'command', label='Exit w/out save (Ctrl-X)',
                          command=lambda tk=master: die(tk))
-        menu.addmenuitem('File', 'command', label='Quit (save first)',
+        menu.addmenuitem('File', 'command', label='Save & Quit (Ctrl-Q)',
                          command=self.quit)
 
         menu.addmenu('Edit', '', '')
@@ -1238,8 +1240,10 @@ class GuiWindow(Frame):
         self.destroy()
 
     def save(self):
-        self.session.save()
-        Msg("Saved.")
+        if self.session.save():
+            Msg("Saved.")
+        else:
+            Msg("Saved canceled.")
         return 1
 
     def view(self, date=None, exper=None):
@@ -1631,11 +1635,11 @@ def start():
     if last:
         logwin.jump(1e6)
 
-    logwin.bind_all('<Alt-Control-KeyPress-q>',
+    logwin.bind_all('<Control-KeyPress-x>',
                     lambda e, tk=tk: die(tk))
+    logwin.bind_all('<Control-KeyPress-q>',
+                    lambda e, w=logwin: w.quit())
     logwin.bind_all('<Control-KeyPress-s>',
-                    lambda e, w=logwin: w.save())
-    logwin.bind_all('<Alt-KeyPress-s>',
                     lambda e, w=logwin: w.save())
     logwin.bind_all('<Alt-KeyPress-n>',
                     lambda e, w=logwin: w.new_exper())
