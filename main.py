@@ -1058,7 +1058,7 @@ class GuiWindow(Frame):
         menu.addmenu('File', '', '')
         menu.addmenuitem('File', 'command', label='Save (Ctrl-S)',
                          command=self.save)
-        menu.addmenuitem('File', 'command', label='Exit w/out save (Ctrl-X)',
+        menu.addmenuitem('File', 'command', label='Exit w/out save',
                          command=lambda tk=master: die(tk))
         menu.addmenuitem('File', 'command', label='Save & Quit (Ctrl-Q)',
                          command=self.quit)
@@ -1635,8 +1635,9 @@ def start():
     if last:
         logwin.jump(1e6)
 
-    logwin.bind_all('<Control-KeyPress-x>',
-                    lambda e, tk=tk: die(tk))
+    if 0:
+        logwin.bind_all('<Control-KeyPress-x>',
+                        lambda e, tk=tk: die(tk))
     logwin.bind_all('<Control-KeyPress-q>',
                     lambda e, w=logwin: w.quit())
     logwin.bind_all('<Control-KeyPress-s>',
