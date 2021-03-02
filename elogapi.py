@@ -62,7 +62,25 @@ def GetNextExper(animal):
     else:
         nextno = int(e[-4:]) + 1
     return "%s%04d" % (animal, nextno)
+
+def CheckDatafile(fnamepat):
+    """Check for dupliate datafile names
+
+    This checks to see if there are already datafiles with similar
+    name in the database -- typically this occurs when you reuse
+    an `exper` from a previous day instead of doing `new cell`.
+
+    This should *not* return anything unless you're appending to
+    and existing file.
+
+    The tell for a real problem is if the directory names don't match.
     
+    """
+    
+    db = getdb()
+    rows = db.query("""SELECT date,src FROM dfile WHERE src LIKE '%s'""" % \
+                    fnamepat)
+    return (1, rows)
 
 def AddDatafile(exper, animal, user, fname, filetype,
                 date=None, crap=0, note='', force=0):
