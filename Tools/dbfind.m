@@ -1,4 +1,4 @@
-function pf = foo(pattern, varargin)
+function pf = dbfind(pattern, varargin)
 %function pf = dbfind(pattern, ...opts...)
 %
 % Query elog database to find cells based on src filename:
@@ -52,7 +52,7 @@ crapok = 0;
 trainok = 0;
 merge = 0;
 
-if any(strcmp(varargin, 'list')),       loadp2m=0;                      end
+if any(strcmp(varargin, 'list')),       multiple_ok=1;loadp2m=0;        end
 if any(strcmp(varargin, 'noload')),     loadp2m=0;                      end
 if any(strcmp(varargin, 'all')),        multiple_ok=1;                  end
 if any(strcmp(varargin, 'one')),        multiple_ok=0;                  end
