@@ -14,11 +14,11 @@ install: config tools
 	cp $(MODULES) $(INSTALLROOT)/lib/elog
 	./itemplate $(INSTALLROOT)/lib $(INSTALLROOT)/bin elog
 	mkdir -p $(MATLABDIR)
-	(cd Tools; sh ./mk_dbfind.m.sh > $(MATLABDIR)/dbfind.m; cd ..)
 
 tools:
 	cp Tools/elogatt* $(INSTALLROOT)/bin
 	cp Tools/dbfind $(INSTALLROOT)/bin
+	(cd Tools; sh ./mk_dbfind.m.sh > $(MATLABDIR)/dbfind.m; cd ..)
 
 config:
 	sh sqlconfig.sh $(INSTALLROOT) >dbsettings.py

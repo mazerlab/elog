@@ -18,6 +18,7 @@ function pf = dbfind(pattern, varargin)
 %     'noload'  - same as list..
 %     'crapok'  - load crap files (by default is to skip these)
 %     'trainok' - allow training files (0000; default is to skip them)
+%     'filecheck' - check for missing datafiles
 %
 %OUTPUT
 %    pf - pypefile datastruct (from p2mLoad2 or p2mMerge)
@@ -51,6 +52,7 @@ loadp2m = 1;
 crapok = 0;
 trainok = 0;
 merge = 0;
+filecheck = 0;
 
 if any(strcmp(varargin, 'list')),       multiple_ok=1;loadp2m=0;        end
 if any(strcmp(varargin, 'noload')),     loadp2m=0;                      end
@@ -59,6 +61,7 @@ if any(strcmp(varargin, 'one')),        multiple_ok=0;                  end
 if any(strcmp(varargin, 'crapok')),     crapok=1;                       end
 if any(strcmp(varargin, 'merge')),      multiple_ok=1;merge=1;          end
 if any(strcmp(varargin, 'trainok')),    trainok=1;                      end
+if any(strcmp(varargin, 'filecheck')),  filecheck=1;                    end
 
 if ~exist('multiple_ok', 'var')
   multiple_ok = 0;
@@ -121,15 +124,22 @@ if ~multiple_ok
   end
 else
   pf = [];
+  k = 1;
   for n = 1:length(src)
-    if exist(src{n}, 'file')
+    if isempty(src{n})
+      keyboard
+    end
+    if ~isempty(src{n}) && exist(src{n}, 'file')
       if loadp2m
-        pf{n} = p2mLoad2([src{n} '.p2m']);
+        pf{k} = p2mLoad2([src{n} '.p2m']);
       else
-        pf{n} = [src{n} '.p2m'];
+        pf{k} = [src{n} '.p2m'];
       end
+      k = k + 1;
     else
-      fprintf('warning: %s missing\n', src{n});
+      if filecheck || loadp2m
+        fprintf('warning: %s missing\n', src{n});
+      end
     end
   end
   if merge
